@@ -1,0 +1,73 @@
+/* Base aesthetic */
+body {
+  background-color: #f9fafb;
+  font-family: 'Inter', sans-serif;
+  color: #333;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  background-color: #25384A;
+  min-height: 100vh;
+}
+
+.sidebar h4 {
+  font-size: 1.2rem;
+}
+
+.sidebar .nav-link {
+  color: #bfc8d0;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 10px 15px;
+  transition: background 0.2s ease;
+}
+
+.sidebar .nav-link.active,
+.sidebar .nav-link:hover {
+  background-color: #324b61;
+  color: #fff;
+}
+
+/* Main content */
+.main-content {
+  background-color: #ffffff;
+  min-height: 100vh;
+}
+
+/* Statistic cards */
+.stat-card {
+  background: #fff;
+  border: 1px solid #e7e9eb;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  border-color: #25384A;
+}
+
+.stat-card .label {
+  color: #7a8a9a;
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+}
+
+.stat-card h3 {
+  color: #25384A;
+  font-weight: 700;
+  font-size: 1.6rem;
+}
+
+/* Table */
+.table th, .table td {
+  vertical-align: middle;
+}
+
+.table thead tr {
+  border-bottom: 2px solid #e7e9eb;
+}
