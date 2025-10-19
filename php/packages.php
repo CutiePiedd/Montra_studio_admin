@@ -40,43 +40,34 @@ if ($stmt) {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin | User Management</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin | Manage Packages</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="../css/dashboard.css">
   <style>
     body {
       background-color: #f8f9fa;
-      font-family: 'Inter', sans-serif;
     }
-   
-     .content {
-      margin-left: 240px; /* same width as sidebar */
-      padding: 30px;
-      width: calc(100% - 240px);
-    }
-
     .card {
-      border-radius: 12px;
-      border: none;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
     }
-
-    table th {
-      background-color: #25384A;
-      color: white;
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
   </style>
 </head>
 <body>
-<div class="d-flex">
-  <!-- Sidebar -->
- <aside class="sidebar d-flex flex-column flex-shrink-0 p-3">
-     <br/><br/><br/>
+  
+    <!-- Sidebar -->
+    <aside class="sidebar d-flex flex-column flex-shrink-0 p-3">
+<br/><br/><br/>
       <ul class="nav nav-pills flex-column mb-auto">
         <li><a href="dashboard.php" class="nav-link">Dashboard</a></li>
-        <li><a href="user_management.php" class="nav-link active">User Management</a></li>
+        <li><a href="user_management.php" class="nav-link">User Management</a></li>
         <li><a href="admin_bookings.php" class="nav-link">Bookings</a></li>
-        <li><a href="packages.php" class="nav-link">Packages</a></li>
+        <li><a href="packages.php" class="nav-link active">Packages</a></li>
       </ul>
       <div class="mt-auto">
         <hr class="text-secondary">
@@ -86,9 +77,10 @@ if ($stmt) {
       </div>
     </aside>
 
-  <!-- Main Content -->
-   <main class="main-content flex-grow-1">
-<nav class="navbar navbar-dark fixed-top shadow-sm custom-navbar">
+    <!-- Main content -->
+     <main class="main-content flex-grow-1">
+
+     <nav class="navbar navbar-dark fixed-top shadow-sm custom-navbar">
         <div class="container-fluid d-flex justify-content-between align-items-center">
           <div class="navbar-left">
             <span class="navbar-title">Montra Studio</span>
@@ -120,89 +112,54 @@ if ($stmt) {
           </div>
         </div>
       </nav>
-      <br/><br/><br/><br/>
 
-<div >
-    <h3 class="fw-bold mb-4" style="color:#25384A;">User Management</h3>
+      <br/> <br/> <br/> <br/> 
+      <h2 class="fw-semibold mb-4">Manage Packages</h2>
 
-    <div class="card p-4">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="fw-bold" style="color:#25384A;">Registered Users</h5>
-        <button class="btn btn-sm btn-outline-secondary" id="refreshUsers">Refresh</button>
+      <div class="row g-4">
+        <div class="col-md-3">
+          <div class="card h-100" onclick="window.location.href='edit_packages_maincharacter.php'">
+            <img src="../uploads/sample_main.jpg" class="card-img-top" alt="Main Character Package">
+            <div class="card-body text-center">
+              <h5 class="card-title">Main Character Package</h5>
+              <p class="card-text">Edit details and images for Main Character.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card h-100" onclick="window.location.href='edit_packages_couple.php'">
+            <img src="../uploads/sample_couple.jpg" class="card-img-top" alt="Couple Package">
+            <div class="card-body text-center">
+              <h5 class="card-title">Couple Package</h5>
+              <p class="card-text">Edit details and images for Couple Package.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card h-100" onclick="window.location.href='edit_packages_family.php'">
+            <img src="../uploads/sample_family.jpg" class="card-img-top" alt="Family Package">
+            <div class="card-body text-center">
+              <h5 class="card-title">Family Package</h5>
+              <p class="card-text">Edit details and images for Family Package.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card h-100" onclick="window.location.href='edit_packages_squad.php'">
+            <img src="../uploads/sample_solo.jpg" class="card-img-top" alt="Squad Package">
+            <div class="card-body text-center">
+              <h5 class="card-title">Squad Goals Package</h5>
+              <p class="card-text">Edit details and images for Solo Package.</p>
+            </div>
+          </div>
+        </div>
       </div>
+    </main>
+ 
 
-      <div class="table-responsive">
-        <table class="table table-hover align-middle">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Full Name</th>
-              <th>Email</th>
-              <th>Registered On</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="userTableBody">
-            <tr><td colspan="5" class="text-center text-muted">Loading users...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
-
-   </main>
-  
-
-<script>
-async function loadUsers() {
-  const response = await fetch('../api/fetch_users.php');
-  const users = await response.json();
-  
-  const tbody = document.getElementById('userTableBody');
-  tbody.innerHTML = '';
-
-  if (users.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No users found.</td></tr>';
-    return;
-  }
-
-  users.forEach((user, index) => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${index + 1}</td>
-      <td>${user.first_name} ${user.last_name}</td>
-      <td>${user.email}</td>
-      <td>${new Date(user.created_at).toLocaleString()}</td>
-      <td>
-        <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id})">Delete</button>
-      </td>
-    `;
-    tbody.appendChild(row);
-  });
-}
-
-async function deleteUser(id) {
-  if (!confirm("Are you sure you want to delete this user?")) return;
-
-  const formData = new FormData();
-  formData.append('id', id);
-
-  const response = await fetch('../api/delete_user.php', {
-    method: 'POST',
-    body: formData
-  });
-  const result = await response.json();
-  alert(result.message);
-  loadUsers();
-}
-
-document.getElementById('refreshUsers').addEventListener('click', loadUsers);
-window.onload = loadUsers;
-</script>
-
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -3,13 +3,26 @@ body {
   background-color: #f9fafb;
   font-family: 'Inter', sans-serif;
   color: #333;
+  margin: 0;
+  overflow-x: hidden;
+}
+html, body {
+  height: 100%;
+}
+main {
+  margin-left: 240px; /* same as sidebar width */
+  width: calc(100% - 240px);
 }
 
 /* Sidebar */
 .sidebar {
   width: 240px;
   background-color: #25384A;
-  min-height: 100vh;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  overflow-y: auto;
 }
 
 .sidebar h4 {
@@ -31,11 +44,36 @@ body {
 }
 
 /* Main content */
+.custom-navbar {
+  background-color: #31506c;
+  height: 70px;
+  width: calc(100% );
+  z-index: 1000;
+}
+
+.navbar-title {
+  color: white;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Content */
 .main-content {
-  background-color: #ffffff;
+  margin-left: 250px;
+  background-color: #f8f9fa;
   min-height: 100vh;
 }
 
+.content-wrapper {
+  margin-top: 100px;
+}
+
+/* Buttons */
+.btn-outline-light:hover {
+  background-color: #f39c12;
+  border-color: #f39c12;
+}
 /* Statistic cards */
 .stat-card {
   background: #fff;
