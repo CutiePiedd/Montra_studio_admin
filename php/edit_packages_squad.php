@@ -43,13 +43,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $images = implode(",", array_merge($existing, $uploaded));
   }
 
-  $update = "UPDATE packages_couple 
+  $update = "UPDATE packages_squad 
            SET name='$name', description='$description', price='$price', includes='$includes', 
                images='$images', main_image='$main_image'
            WHERE id=$id";
 
   if (mysqli_query($conn, $update)) {
-    header("Location: edit_packages_couple.php?success=1");
+    header("Location: edit_packages_squad.php?success=1");
     exit();
   } else {
     echo "Error: " . mysqli_error($conn);
@@ -65,6 +65,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <title>Edit Squad Package | Montra Studio</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="../css/dashboard.css">
+  <style>
+    .form-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      padding: 30px;
+    }
+    .image-preview {
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 15px;
+    }
+    .image-preview img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+    .gallery-img {
+      position: relative;
+      display: inline-block;
+      margin: 10px;
+    }
+    .gallery-img img {
+      width: 120px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+    .delete-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: rgba(255, 0, 0, 0.8);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
 <div class="d-flex">
@@ -88,76 +129,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <!-- Main Content -->
   <main class="main-content p-5 flex-grow-1 bg-light">
-    <div class="container">
-      <h2 class="fw-semibold text-dark mb-4">Edit Couple Package</h2>
+      <div class="container">
+        <h2 class="fw-semibold mb-4">Edit “Squad” Package</h2>
 
-      <?php if (isset($_GET['deleted'])): ?>
-        <div class="alert alert-danger">Image deleted successfully.</div>
-      <?php endif; ?>
-      <?php if (isset($_GET['success'])): ?>
-        <div class="alert alert-success">Package updated successfully!</div>
-      <?php endif; ?>
+        <?php if (isset($_GET['success'])): ?>
+          <div class="alert alert-success">Package updated successfully!</div>
+        <?php endif; ?>
 
-      <div class="card shadow-sm border-0 p-4">
-        <form method="POST" enctype="multipart/form-data">
-          <div class="mb-3">
-            <label class="form-label fw-medium">Package Name</label>
-            <input type="text" name="name" class="form-control" value="<?= htmlspecialchars($package['name']) ?>" required>
-          </div>
+        <div class="form-card">
+          <form method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+              <label class="form-label">Package Name</label>
+              <input type="text" class="form-control" name="name" value="<?= htmlspecialchars($package['name']) ?>" required>
+            </div>
 
-          <div class="mb-3">
-            <label class="form-label fw-medium">Description</label>
-            <textarea name="description" rows="4" class="form-control" required><?= htmlspecialchars($package['description']) ?></textarea>
-          </div>
+            <div class="mb-3">
+              <label class="form-label">Description</label>
+              <textarea class="form-control" name="description" rows="5" required><?= htmlspecialchars($package['description']) ?></textarea>
+            </div>
 
-          <div class="mb-3">
-            <label class="form-label fw-medium">Price</label>
-            <input type="number" name="price" step="0.01" class="form-control" value="<?= $package['price'] ?>" required>
-          </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Price</label>
+                <input type="number" class="form-control" name="price" step="0.01" value="<?= $package['price'] ?>" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Includes</label>
+                <textarea class="form-control" name="includes" rows="3" required><?= htmlspecialchars($package['includes']) ?></textarea>
+              </div>
+            </div>
 
-          <div class="mb-3">
-            <label class="form-label fw-medium">Includes (comma-separated)</label>
-            <textarea name="includes" rows="3" class="form-control" required><?= htmlspecialchars($package['includes']) ?></textarea>
-          </div>
+            <div class="mb-4">
+              <label class="form-label">Main Image</label>
+              <div class="image-preview mb-2">
+                <img src="http://localhost/montra_website/uploads/<?= htmlspecialchars($package['main_image']) ?>" alt="Main Image">
+              </div>
+              <input type="file" class="form-control" name="main_image">
+            </div>
 
-          <div class="mb-3">
-            <label class="form-label fw-medium">Upload Main Image (optional)</label>
-            <input type="file" name="main_image" class="form-control">
-          </div>
+            <div class="mb-4">
+              <label class="form-label">Add More Images</label>
+              <input type="file" class="form-control mb-3" name="images[]" multiple>
+              <div>
+                <?php 
+                $imgs = explode(",", $package['images']);
+                foreach ($imgs as $img):
+                  $img = trim($img);
+                  if ($img): ?>
+                    <div class="gallery-img">
+                      <img src="http://localhost/montra_website/uploads/<?= htmlspecialchars($img) ?>" alt="Package Image">
+                      <a href="delete_image_squad.php?package_id=<?= $package['id'] ?>&filename=<?= urlencode($img) ?>" 
+                         onclick="return confirm('Are you sure you want to delete this image?');" 
+                         class="delete-btn">✕</a>
+                    </div>
+                  <?php endif;
+                endforeach; ?>
+              </div>
+            </div>
 
-          <div class="mb-3">
-            <label class="form-label fw-medium">Upload New Images (optional)</label>
-            <input type="file" name="images[]" class="form-control" multiple>
-          </div>
-
-          <div class="text-end">
-            <button type="submit" class="btn btn-primary px-4">💾 Save Changes</button>
-          </div>
-        </form>
-      </div>
-
-      <div class="mt-5">
-        <h4 class="fw-semibold">Current Images</h4>
-        <div class="d-flex flex-wrap mt-3">
-          <?php 
-          $imgs = explode(",", $package['images']);
-          foreach ($imgs as $img):
-            $img = trim($img);
-            if ($img):
-          ?>
-          <div class="text-center me-3 mb-3">
-            <img src="http://localhost/montra_website/uploads/<?= htmlspecialchars($img) ?>" 
-                 alt="Package Image" width="150" height="110" 
-                 style="object-fit:cover; border-radius:10px; border:1px solid #ddd; display:block; margin-bottom:8px;">
-            <a href="delete_image_couple.php?package_id=<?= $package['id'] ?>&filename=<?= urlencode($img) ?>"
-               onclick="return confirm('Are you sure you want to delete this image?');"
-               class="btn btn-sm btn-danger px-3">Delete</a>
-          </div>
-          <?php endif; endforeach; ?>
+            <button type="submit" class="btn btn-primary px-4 py-2">Save Changes</button>
+          </form>
         </div>
       </div>
-    </div>
-  </main>
+    </main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

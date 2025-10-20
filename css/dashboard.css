@@ -14,6 +14,62 @@ main {
   width: calc(100% - 240px);
 }
 
+.notification-dropdown {
+  position: relative;
+  cursor: pointer;
+}
+
+.notification-dropdown i {
+  transition: color 0.2s;
+}
+
+.notification-dropdown i:hover {
+  color: #ffc107;
+}
+
+.notification-dropdown .notif-count {
+  font-size: 0.7rem;
+  padding: 4px 6px;
+}
+
+.notification-dropdown .dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 35px;
+  background: #fff;
+  color: #000;
+  min-width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 999;
+}
+
+.notification-dropdown .notif-item:hover {
+  background-color: #f6f6f6;
+  cursor: pointer;
+}
+
+.notification-dropdown.show .dropdown-content {
+  display: block;
+}
+
+.notification-dropdown .view-all {
+  display: block;
+  text-align: center;
+  padding: 10px;
+  font-weight: 500;
+  color: #007bff;
+  text-decoration: none;
+  border-top: 1px solid #ddd;
+}
+
+.notification-dropdown .view-all:hover {
+  background-color: #f1f1f1;
+}
+
 /* Sidebar */
 .sidebar {
   width: 240px;
@@ -100,7 +156,59 @@ main {
   font-weight: 700;
   font-size: 1.6rem;
 }
+/* Cards layout */
+.row.cards-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    padding-left: 25px;
+    padding-right: 40px;
+    gap: 25px;
+}
 
+/* Individual card */
+.card {
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    background-color: #fff;
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+.card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+.card-body {
+    padding: 15px;
+    text-align: center;
+}
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #111827;
+}
+.card-text {
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+    .sidebar {
+        display: none;
+    }
+    .main-content {
+        margin-left: 0;
+        padding: 80px 15px 15px 15px;
+    }
+}
 /* Table */
 .table th, .table td {
   vertical-align: middle;
@@ -109,3 +217,12 @@ main {
 .table thead tr {
   border-bottom: 2px solid #e7e9eb;
 }
+.chart-container {
+  position: relative;
+  width: 100%;      /* full width of the column */
+  height: 300px;   /* adjust height as needed */
+   display: flex;        /* enable flexbox */
+  justify-content: center; /* horizontal center */
+  align-items: center; 
+}
+

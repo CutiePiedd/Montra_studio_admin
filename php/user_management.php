@@ -34,6 +34,13 @@ if ($stmt) {
 } else {
     die("Query failed: " . $conn->error);
 }
+$admin_id = $_SESSION['admin_id'];
+$notifQuery = "SELECT id, message, created_at FROM notifications WHERE admin_id = ? ORDER BY created_at DESC LIMIT 10";
+$stmt = $conn->prepare($notifQuery);
+$stmt->bind_param("i", $admin_id);
+$stmt->execute();
+$notifs = $stmt->get_result();
+$notifCount = $notifs->num_rows;
 ?>
 
 <!DOCTYPE html>
@@ -41,6 +48,7 @@ if ($stmt) {
 <head>
   <meta charset="UTF-8">
   <title>Admin | User Management</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="../css/dashboard.css">
   <style>
@@ -88,38 +96,71 @@ if ($stmt) {
 
   <!-- Main Content -->
    <main class="main-content flex-grow-1">
+ <!-- Top navbar -->
 <nav class="navbar navbar-dark fixed-top shadow-sm custom-navbar">
-        <div class="container-fluid d-flex justify-content-between align-items-center">
-          <div class="navbar-left">
-            <span class="navbar-title">Montra Studio</span>
-          </div>
-          <div class="navbar-right">
-            <div class="dropdown">
-              <button class="btn btn-dark border-0" id="adminDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="Admin" width="35" height="35" class="rounded-circle">
-                
-              </button>
-              <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="adminDropdown">
-                <li class="dropdown-header text-center">
-                  <strong><?php echo htmlspecialchars($admin['name']); ?></strong><br>
-                  <small class="text-muted"><?php echo htmlspecialchars($admin['email']); ?></small>
-                </li>
-                <li><hr class="dropdown-divider"></li>
-                <li class="px-3">
-                  <p class="mb-1"><strong>Address:</strong> <?php echo htmlspecialchars($admin['address'] ?? 'N/A'); ?></p>
-                  <p class="mb-1"><strong>Contact:</strong> <?php echo htmlspecialchars($admin['contact_number'] ?? 'N/A'); ?></p>
-                </li>
-                <li><hr class="dropdown-divider"></li>
-                <li>
-                  <button class="dropdown-item text-primary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
-                    Change Password
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </nav>
+  <div class="container-fluid d-flex justify-content-between align-items-center">
+    
+    <div class="navbar-left">
+      <span class="navbar-title">Montra Studio</span>
+    </div>
+
+    <!-- Right side: Notifications + Profile -->
+    <div class="navbar-right d-flex align-items-center gap-3">
+
+      <!-- Notification icon -->
+      <div class="notification-dropdown position-relative">
+        <i class="fas fa-bell fs-5 text-light"></i>
+        <?php if ($notifCount > 0): ?>
+          <span class="notif-count position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            <?php echo $notifCount; ?>
+          </span>
+        <?php endif; ?>
+
+        <div class="dropdown-content">
+          <?php if ($notifCount === 0): ?>
+            <p class="px-3 py-2 mb-0">No new notifications</p>
+          <?php else: ?>
+            <?php while ($n = $notifs->fetch_assoc()): ?>
+              <div class="notif-item px-3 py-2 border-bottom">
+                <p class="mb-1"><?php echo htmlspecialchars($n['message']); ?></p>
+                <small class="text-muted"><?php echo date('M d, Y h:i A', strtotime($n['created_at'])); ?></small>
+              </div>
+            <?php endwhile; ?>
+          <?php endif; ?>
+<a href="view_all_notifications.php" class="view-all">View all notifications</a>
+</div>
+
+      </div>
+
+      <!-- Profile dropdown -->
+      <div class="dropdown">
+        <button class="btn btn-dark border-0" id="adminDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" 
+               alt="Admin" width="35" height="35" class="rounded-circle">
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="adminDropdown">
+          <li class="dropdown-header text-center">
+            <strong><?php echo htmlspecialchars($admin['name']); ?></strong><br>
+            <small class="text-muted"><?php echo htmlspecialchars($admin['email']); ?></small>
+          </li>
+          <li><hr class="dropdown-divider"></li>
+          <li class="px-3">
+            <p class="mb-1"><strong>Address:</strong> <?php echo htmlspecialchars($admin['address'] ?? 'N/A'); ?></p>
+            <p class="mb-1"><strong>Contact:</strong> <?php echo htmlspecialchars($admin['contact_number'] ?? 'N/A'); ?></p>
+          </li>
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <button class="dropdown-item text-primary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+              Change Password
+            </button>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</nav>
       <br/><br/><br/><br/>
 
 <div >
@@ -203,6 +244,24 @@ async function deleteUser(id) {
 document.getElementById('refreshUsers').addEventListener('click', loadUsers);
 window.onload = loadUsers;
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const notifIcon = document.querySelector('.notification-dropdown i');
+  const notifDropdown = document.querySelector('.notification-dropdown');
+
+  notifIcon.addEventListener('click', () => {
+    notifDropdown.classList.toggle('show');
+  });
+
+  // Close dropdown if clicking outside
+  document.addEventListener('click', (e) => {
+    if (!notifDropdown.contains(e.target)) {
+      notifDropdown.classList.remove('show');
+    }
+  });
+});
+</script>
+
 
 </body>
 </html>

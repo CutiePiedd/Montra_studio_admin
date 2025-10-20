@@ -93,6 +93,33 @@ $stmt3 = $conn->prepare("UPDATE bookings SET status='approved' WHERE id = ?");
 $stmt3->bind_param("i", $booking_id);
 $stmt3->execute();
 $stmt3->close();
+//===========================
+// ✅ Create notification automatically
+// ===========================
+require_once '../api/db_connect.php';
+
+// Fetch booking info directly
+$bookingQuery = "SELECT contact_person, package_name, preferred_date FROM bookings WHERE id = ? LIMIT 1";
+$bookingStmt = $conn->prepare($bookingQuery);
+$bookingStmt->bind_param("i", $booking_id);
+$bookingStmt->execute();
+$result = $bookingStmt->get_result();
+$booking = $result->fetch_assoc();
+$bookingStmt->close();
+
+if ($booking) {
+    $userFullName = $booking['contact_person'];
+    $packageName = $booking['package_name'];
+    $bookingDate = date('F j, Y', strtotime($booking['preferred_date']));
+    $message = "📸 $userFullName booked the $packageName package for $bookingDate.";
+
+    $admin_id = $_SESSION['admin_id'];
+    $stmtNotif = $conn->prepare("INSERT INTO notifications (admin_id, message) VALUES (?, ?)");
+    $stmtNotif->bind_param("is", $admin_id, $message);
+    $stmtNotif->execute();
+    $stmtNotif->close();
+}
 
 header("Location: admin_bookings.php?msg=approved");
 exit();
+?>
