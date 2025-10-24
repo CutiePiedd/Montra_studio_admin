@@ -107,12 +107,14 @@ $packageCountsJson = json_encode($packageCounts);
 // Fetch 5 upcoming bookings approved by admin
 $recentBookingsSql = "
     SELECT b.id, u.first_name, u.last_name, b.package_name, b.preferred_date, b.status
-    FROM bookings b
-    JOIN users u ON b.user_id = u.id
-    WHERE b.status = 'Approved'
-    ORDER BY b.preferred_date ASC
+    FROM bookings AS b
+    JOIN users AS u ON b.user_id = u.id
+    WHERE b.status = 'approved' 
+      AND b.preferred_date >= CURDATE() - INTERVAL 7 DAY
+    ORDER BY b.preferred_date DESC
     LIMIT 5
 ";
+
 $recentBookingsResult = $conn->query($recentBookingsSql);
 $recentBookings = [];
 if ($recentBookingsResult) {
@@ -129,8 +131,16 @@ $stmt->bind_param("i", $admin_id);
 $stmt->execute();
 $notifs = $stmt->get_result();
 $notifCount = $notifs->num_rows;
+
+header("Cache-Control: no-cache, no-store, must-revalidate");
+header("Pragma: no-cache");
+header("Expires: 0");
+
 ?>
+
+
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -139,6 +149,84 @@ $notifCount = $notifs->num_rows;
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="../css/dashboard.css">
+  <style>
+  .upcoming-section {
+  background: #fff;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  max-width: 1200px;
+  margin: 40px auto;
+}
+
+.booking-card {
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 15px;
+  background: #f9fafc;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.booking-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.booking-card h4 {
+  margin: 0 0 5px;
+  color: #2c3e50;
+}
+
+.booking-card p {
+  margin: 4px 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+/* custom booking modal — avoids colliding with Bootstrap .modal */
+.booking-modal {
+  display: none;
+  position: fixed;
+  z-index: 1040; /* lower than bootstrap modal backdrop (1050+) but above page */
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.booking-modal .booking-modal-inner {
+  background: #fff;
+  padding: 25px;
+  border-radius: 15px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  animation: slideUp 0.3s ease;
+}
+
+.close-btn {
+  float: right;
+  font-size: 1.5rem;
+  color: #555;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  color: #000;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; } to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+</style>
 </head>
 <body>
   <div class="d-flex">
@@ -156,7 +244,7 @@ $notifCount = $notifs->num_rows;
       <div class="mt-auto">
         <hr class="text-secondary">
         <form action="logout.php" method="POST">
-          <button class="btn btn-outline-light w-100" type="submit">Logout</button>
+          <button class= "btn btn-outline-blue w-100" type="submit">Logout</button>
         </form>
       </div>
     </aside>
@@ -199,32 +287,32 @@ $notifCount = $notifs->num_rows;
 </div>
 
       </div>
-
       <!-- Profile dropdown -->
       <div class="dropdown">
-        <button class="btn btn-dark border-0" id="adminDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-          <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" 
-               alt="Admin" width="35" height="35" class="rounded-circle">
-        </button>
+  <button id="adminDropdown" data-bs-toggle="dropdown" aria-expanded="false" class="profile-btn">
+    <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" 
+         alt="Admin" width="35" height="35">
+  </button>
 
-        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="adminDropdown">
-          <li class="dropdown-header text-center">
-            <strong><?php echo htmlspecialchars($admin['name']); ?></strong><br>
-            <small class="text-muted"><?php echo htmlspecialchars($admin['email']); ?></small>
-          </li>
-          <li><hr class="dropdown-divider"></li>
-          <li class="px-3">
-            <p class="mb-1"><strong>Address:</strong> <?php echo htmlspecialchars($admin['address'] ?? 'N/A'); ?></p>
-            <p class="mb-1"><strong>Contact:</strong> <?php echo htmlspecialchars($admin['contact_number'] ?? 'N/A'); ?></p>
-          </li>
-          <li><hr class="dropdown-divider"></li>
-          <li>
-            <button class="dropdown-item text-primary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
-              Change Password
-            </button>
-          </li>
-        </ul>
-      </div>
+  <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="adminDropdown">
+    <li class="dropdown-header text-center">
+      <strong><?php echo htmlspecialchars($admin['name']); ?></strong><br>
+      <small class="text-muted"><?php echo htmlspecialchars($admin['email']); ?></small>
+    </li>
+    <li><hr class="dropdown-divider"></li>
+    <li class="px-3">
+      <p class="mb-1"><strong>Address:</strong> <?php echo htmlspecialchars($admin['address'] ?? 'N/A'); ?></p>
+      <p class="mb-1"><strong>Contact:</strong> <?php echo htmlspecialchars($admin['contact_number'] ?? 'N/A'); ?></p>
+    </li>
+    <li><hr class="dropdown-divider"></li>
+    <li>
+      <button class="dropdown-item text-primary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+        Change Password
+      </button>
+    </li>
+  </ul>
+</div>
+ 
 
     </div>
   </div>
@@ -246,7 +334,7 @@ $notifCount = $notifs->num_rows;
     <div class="col-md-4">
       <div class="card text-center shadow-sm">
         <div class="card-body">
-          <h5 class="card-title">TTotal Bookings</h5>
+          <h5 class="card-title">Total Bookings</h5>
           <p class="card-text fs-3 fw-bold"><?php echo $totalBookingsMonth; ?></p>
         </div>
       </div>
@@ -263,11 +351,6 @@ $notifCount = $notifs->num_rows;
       </div>
     </div>
 
-
-  <!-- Charts Section -->
-
-
-    <!-- Bookings Trend Line Chart -->
    <!-- Bookings Trend Line Chart -->
 <div class="col-md-6">
   <div class="card shadow-sm">
@@ -360,28 +443,17 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <!-- Recent Bookings Section -->
-<div class="container mt-4">
-  <div class="card shadow-sm">
-    <div class="card-body">
-      <h5 class="card-title">Recent Approved Bookings</h5>
-      <?php if (empty($recentBookings)): ?>
-        <p class="text-muted mb-0">No recent bookings.</p>
-      <?php else: ?>
-        <ul class="list-group list-group-flush">
-          <?php foreach ($recentBookings as $booking): ?>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              <div>
-                <strong><?php echo htmlspecialchars($booking['first_name'] . ' ' . $booking['last_name']); ?></strong>  
-                booked <strong><?php echo htmlspecialchars($booking['package_name']); ?></strong>
-              </div>
-              <div>
-                <span class="badge bg-success"><?php echo date('M d, Y', strtotime($booking['preferred_date'])); ?></span>
-              </div>
-            </li>
-          <?php endforeach; ?>
-        </ul>
-      <?php endif; ?>
-    </div>
+<div class="upcoming-section">
+  <h3>📅 Upcoming Bookings</h3>
+  <div id="upcomingBookings">
+    <p>Loading upcoming bookings...</p>
+  </div>
+</div>
+<!-- Modal -->
+<div id="bookingModal" class="booking-modal">
+  <div class="booking-modal-inner">
+    <span class="close-btn" onclick="closeModal()">&times;</span>
+    <div id="modalBody">Loading...</div>
   </div>
 </div>
 
@@ -419,6 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  
   <script>
   document.getElementById("changePasswordForm").addEventListener("submit", function(event) {
     const newPass = document.getElementById("newPassword").value;
@@ -446,6 +519,99 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+</script>
+<script>
+async function loadUpcomingBookings() {
+  const container = document.getElementById('upcomingBookings');
+  try {
+    const response = await fetch('fetch_upcoming_bookings.php');
+    const data = await response.json();
+
+    if (data.length === 0) {
+      container.innerHTML = '<p>No upcoming bookings at the moment.</p>';
+      return;
+    }
+
+    let html = '';
+    data.forEach(b => {
+      html += `
+        <div class="booking-card" onclick="showBookingDetails(${b.id})">
+          <h4>${b.package_name}</h4>
+          <p><strong>Booked by:</strong> ${b.first_name} ${b.last_name}</p>
+          <p><strong>Date:</strong> ${b.preferred_date}</p>
+          <p><strong>Time:</strong> ${b.preferred_time}</p>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+  } catch (error) {
+    container.innerHTML = '<p>Error loading bookings.</p>';
+  }
+}
+
+// initial load
+loadUpcomingBookings();
+
+// refresh every 60 seconds
+setInterval(loadUpcomingBookings, 60000);
+</script>
+
+<script>
+function closeModal() {
+  document.getElementById('bookingModal').style.display = 'none';
+}
+
+async function showBookingDetails(bookingId) {
+  const modal = document.getElementById('bookingModal');
+  const body = document.getElementById('modalBody');
+  modal.style.display = 'flex';
+  body.innerHTML = '<p>Loading booking details...</p>';
+
+  try {
+    const res = await fetch(`../api/get_booking_details.php?booking_id=${bookingId}`);
+    const data = await res.json();
+
+    if (!data.success) {
+      body.innerHTML = `<p>Booking not found.</p>`;
+      return;
+    }
+
+    body.innerHTML = `
+      <h3>${data.package_name}</h3>
+      <p><strong>Booked by:</strong> ${data.user_name}</p>
+      <p><strong>Contact Person:</strong> ${data.contact_person}</p>
+      <p><strong>Email:</strong> ${data.email}</p>
+      <p><strong>Phone:</strong> ${data.phone}</p>
+      <p><strong>Date:</strong> ${data.preferred_date}</p>
+      <p><strong>Time:</strong> ${data.preferred_time}</p>
+      <p><strong>Add-ons:</strong> ${data.addons || 'None'}</p>
+      <p><strong>Special Request:</strong> ${data.special_request || 'None'}</p>
+      <p><strong>Total Price:</strong> ₱${parseFloat(data.total_price).toLocaleString()}</p>
+    `;
+  } catch (err) {
+    body.innerHTML = '<p>Failed to load booking details.</p>';
+  }
+}
+</script>
+<script>
+function openBookingModal(content) {
+  const modal = document.getElementById("bookingModal");
+  const modalBody = document.getElementById("modalBody");
+  modalBody.innerHTML = content;
+  modal.style.display = "flex"; // use flex to center
+}
+
+function closeModal() {
+  document.getElementById("bookingModal").style.display = "none";
+}
+
+window.onclick = function(event) {
+  const modal = document.getElementById("bookingModal");
+  if (event.target === modal) {
+    modal.style.display = "none";
+  }
+};
 </script>
 
 </body>

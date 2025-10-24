@@ -73,14 +73,28 @@ $notifCount = $notifs->num_rows;
       background-color: #25384A;
       color: white;
     }
+/* Ensure sidebar and navbar don't block modals or dropdowns */
+/* Layering fixes: make navbar visible but allow dropdowns/modals to overlay */
+.custom-navbar { z-index: 1030; position: fixed; top: 0; left: 0; right: 0; }
+.sidebar { z-index: 1020; }
+
+/* Ensure Bootstrap dropdown and modal layers win */
+.dropdown-menu { z-index: 2000 !important; }
+.modal-backdrop { z-index: 2050 !important; }
+.modal { z-index: 2060 !important; }
+
+/* If any element uses pointer-events:none accidentally, restore pointer events for navbar */
+.custom-navbar, .custom-navbar * { pointer-events: auto; }
   </style>
 </head>
 <body>
 <div class="d-flex">
-  <!-- Sidebar -->
- <aside class="sidebar d-flex flex-column flex-shrink-0 p-3">
-     <br/><br/><br/>
+
+    <!-- Sidebar -->
+    <aside class="sidebar d-flex flex-column flex-shrink-0 p-3">
+  
       <ul class="nav nav-pills flex-column mb-auto">
+        <br/><br/><br/>
         <li><a href="dashboard.php" class="nav-link">Dashboard</a></li>
         <li><a href="user_management.php" class="nav-link active">User Management</a></li>
         <li><a href="admin_bookings.php" class="nav-link">Bookings</a></li>
@@ -89,14 +103,15 @@ $notifCount = $notifs->num_rows;
       <div class="mt-auto">
         <hr class="text-secondary">
         <form action="logout.php" method="POST">
-          <button class="btn btn-outline-light w-100" type="submit">Logout</button>
+          <button class= "btn btn-outline-blue w-100" type="submit">Logout</button>
         </form>
       </div>
     </aside>
 
-  <!-- Main Content -->
-   <main class="main-content flex-grow-1">
- <!-- Top navbar -->
+    <!-- Main content -->
+    <main class="main-content flex-grow-1">
+
+      <!-- Top navbar -->
 <nav class="navbar navbar-dark fixed-top shadow-sm custom-navbar">
   <div class="container-fluid d-flex justify-content-between align-items-center">
     
@@ -131,38 +146,37 @@ $notifCount = $notifs->num_rows;
 </div>
 
       </div>
-
       <!-- Profile dropdown -->
       <div class="dropdown">
-        <button class="btn btn-dark border-0" id="adminDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-          <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" 
-               alt="Admin" width="35" height="35" class="rounded-circle">
-        </button>
+  <button id="adminDropdown" data-bs-toggle="dropdown" aria-expanded="false" class="profile-btn">
+    <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" 
+         alt="Admin" width="35" height="35">
+  </button>
 
-        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="adminDropdown">
-          <li class="dropdown-header text-center">
-            <strong><?php echo htmlspecialchars($admin['name']); ?></strong><br>
-            <small class="text-muted"><?php echo htmlspecialchars($admin['email']); ?></small>
-          </li>
-          <li><hr class="dropdown-divider"></li>
-          <li class="px-3">
-            <p class="mb-1"><strong>Address:</strong> <?php echo htmlspecialchars($admin['address'] ?? 'N/A'); ?></p>
-            <p class="mb-1"><strong>Contact:</strong> <?php echo htmlspecialchars($admin['contact_number'] ?? 'N/A'); ?></p>
-          </li>
-          <li><hr class="dropdown-divider"></li>
-          <li>
-            <button class="dropdown-item text-primary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
-              Change Password
-            </button>
-          </li>
-        </ul>
-      </div>
+  <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="adminDropdown">
+    <li class="dropdown-header text-center">
+      <strong><?php echo htmlspecialchars($admin['name']); ?></strong><br>
+      <small class="text-muted"><?php echo htmlspecialchars($admin['email']); ?></small>
+    </li>
+    <li><hr class="dropdown-divider"></li>
+    <li class="px-3">
+      <p class="mb-1"><strong>Address:</strong> <?php echo htmlspecialchars($admin['address'] ?? 'N/A'); ?></p>
+      <p class="mb-1"><strong>Contact:</strong> <?php echo htmlspecialchars($admin['contact_number'] ?? 'N/A'); ?></p>
+    </li>
+    <li><hr class="dropdown-divider"></li>
+    <li>
+      <button class="dropdown-item text-primary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+        Change Password
+      </button>
+    </li>
+  </ul>
+</div>
+ 
 
     </div>
   </div>
 </nav>
-      <br/><br/><br/><br/>
-
+ <br/> <br/> <br/> <br/> 
 <div >
     <h3 class="fw-bold mb-4" style="color:#25384A;">User Management</h3>
 
@@ -196,8 +210,46 @@ $notifCount = $notifs->num_rows;
 
 
    </main>
+  <!-- Change Password Modal -->
+ <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="changePasswordLabel">Change Password</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="changePasswordForm" method="POST" action="change_password.php">
+            <div class="mb-3">
+              <label for="currentPassword" class="form-label">Current Password</label>
+              <input type="password" class="form-control" id="currentPassword" name="current_password" required>
+            </div>
+            <div class="mb-3">
+              <label for="newPassword" class="form-label">New Password</label>
+              <input type="password" class="form-control" id="newPassword" name="new_password" required>
+            </div>
+            <div class="mb-3">
+              <label for="confirmPassword" class="form-label">Confirm New Password</label>
+              <input type="password" class="form-control" id="confirmPassword" name="confirm_password" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Update Password</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   
-
+  <script>
+  document.getElementById("changePasswordForm").addEventListener("submit", function(event) {
+    const newPass = document.getElementById("newPassword").value;
+    const confirmPass = document.getElementById("confirmPassword").value;
+    if (newPass !== confirmPass) {
+      alert("New passwords do not match!");
+      event.preventDefault();
+    }
+  });
+  </script>
 <script>
 async function loadUsers() {
   const response = await fetch('../api/fetch_users.php');

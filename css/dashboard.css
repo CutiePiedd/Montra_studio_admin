@@ -1,19 +1,24 @@
 /* Base aesthetic */
 body {
-  background-color: #f9fafb;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Poppins', sans-serif;
+  background: #f4f5f7; /* off-white background */
   color: #333;
   margin: 0;
   overflow-x: hidden;
 }
+
 html, body {
   height: 100%;
 }
+
 main {
-  margin-left: 240px; /* same as sidebar width */
+  margin-left: 300px; /* same as sidebar width */
   width: calc(100% - 240px);
 }
 
+/* ======================
+   Notification Dropdown
+   ====================== */
 .notification-dropdown {
   position: relative;
   cursor: pointer;
@@ -24,7 +29,7 @@ main {
 }
 
 .notification-dropdown i:hover {
-  color: #ffc107;
+  color: #1e3a8a;
 }
 
 .notification-dropdown .notif-count {
@@ -61,7 +66,7 @@ main {
   text-align: center;
   padding: 10px;
   font-weight: 500;
-  color: #007bff;
+  color: #1e3a8a;
   text-decoration: none;
   border-top: 1px solid #ddd;
 }
@@ -70,159 +75,254 @@ main {
   background-color: #f1f1f1;
 }
 
-/* Sidebar */
+/* ======================
+   Sidebar
+   ====================== */
 .sidebar {
-  width: 240px;
-  background-color: #25384A;
+  width: 250px;
+  background: #ffffff; /* off-white */
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.08);
+  color: #010309;
   height: 100vh;
   position: fixed;
-  top: 0;
   left: 0;
-  overflow-y: auto;
-}
-
-.sidebar h4 {
-  font-size: 1.2rem;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #eaeaea;
+  transition: 0.3s;
 }
 
 .sidebar .nav-link {
-  color: #bfc8d0;
+  color: #000000;
   font-weight: 500;
-  border-radius: 8px;
-  padding: 10px 15px;
-  transition: background 0.2s ease;
+  padding: 12px 18px;
+  border-radius: 10px;
+  margin: 5px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.3s, color 0.3s;
+}
+
+.sidebar .nav-link i {
+  width: 20px;
+  text-align: center;
 }
 
 .sidebar .nav-link.active,
 .sidebar .nav-link:hover {
-  background-color: #324b61;
-  color: #fff;
+  background: #0f0cc4b3;
+  color: #000000; /* accent */
 }
 
-/* Main content */
+.sidebar hr {
+  border-color: #e5e5e5;
+}
+
+/* ======================
+   Navbar
+   ====================== */
 .custom-navbar {
-  background-color: #31506c;
+  background-color: #ffffff;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
   height: 70px;
-  width: calc(100% );
+  width: 100%;
   z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 25px;
 }
 
 .navbar-title {
-  color: white;
+  color: #091e58;
   font-size: 20px;
   font-weight: 600;
   letter-spacing: 0.5px;
 }
+/* Remove border or background from profile icon button */
+.navbar .dropdown-toggle,
+.navbar .dropdown-toggle:focus,
+.navbar .dropdown-toggle:active {
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
 
-/* Content */
+
+/* ======================
+   Main Content
+   ====================== */
 .main-content {
   margin-left: 250px;
-  background-color: #f8f9fa;
+  background-color: #f7f8fa;
+   padding: 40px 60px; 
   min-height: 100vh;
+  transition: 0.3s;
 }
 
 .content-wrapper {
   margin-top: 100px;
 }
 
-/* Buttons */
-.btn-outline-light:hover {
-  background-color: #f39c12;
-  border-color: #f39c12;
-}
-/* Statistic cards */
+/* ======================
+   Statistic Cards
+   ====================== */
 .stat-card {
   background: #fff;
-  border: 1px solid #e7e9eb;
-  border-radius: 10px;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
   padding: 20px;
   text-align: left;
   transition: all 0.2s ease;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.03);
 }
 
 .stat-card:hover {
-  transform: translateY(-3px);
-  border-color: #25384A;
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
 }
 
 .stat-card .label {
-  color: #7a8a9a;
+  color: #6b7280;
   font-size: 0.9rem;
   margin-bottom: 5px;
 }
 
 .stat-card h3 {
-  color: #25384A;
+  color: #111827;
   font-weight: 700;
   font-size: 1.6rem;
 }
-/* Cards layout */
+
+/* ======================
+   Card Layout
+   ====================== */
 .row.cards-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    padding-left: 25px;
-    padding-right: 40px;
-    gap: 25px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  padding-left: 25px;
+  padding-right: 40px;
+  gap: 25px;
 }
 
 /* Individual card */
 .card {
-    border: none;
-    border-radius: 15px;
-    overflow: hidden;
-    background-color: #fff;
-    transition: all 0.3s ease-in-out;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border: none;
+  border-radius: 15px;
+  overflow: hidden;
+  background-color: #fff;
+  transition: all 0.3s ease-in-out;
+  padding:25px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 .card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  transform: translateY(-8px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
 }
 .card img {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
 }
 .card-body {
-    padding: 15px;
-    text-align: center;
+  padding: 15px;
+  text-align: center;
 }
 .card-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: #111827;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #111827;
 }
 .card-text {
-    font-size: 0.9rem;
-    color: #6b7280;
+  font-size: 0.9rem;
+  color: #6b7280;
 }
 
-/* Responsive tweaks */
-@media (max-width: 768px) {
-    .sidebar {
-        display: none;
-    }
-    .main-content {
-        margin-left: 0;
-        padding: 80px 15px 15px 15px;
-    }
+/* ======================
+   Buttons
+   ====================== */
+.btn-outline-light:hover {
+  background-color: #1e3a8a;
+  border-color: #1e3a8a;
+  color: #fff;
 }
-/* Table */
+.profile-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.profile-btn:focus,
+.profile-btn:active {
+  outline: none;
+  box-shadow: none;
+}
+
+
+/* ======================
+   Table
+   ====================== */
 .table th, .table td {
   vertical-align: middle;
 }
 
 .table thead tr {
   border-bottom: 2px solid #e7e9eb;
-}
-.chart-container {
-  position: relative;
-  width: 100%;      /* full width of the column */
-  height: 300px;   /* adjust height as needed */
-   display: flex;        /* enable flexbox */
-  justify-content: center; /* horizontal center */
-  align-items: center; 
+  background-color: #f9fafb;
 }
 
+/* ======================
+   Chart
+   ====================== */
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ======================
+   Responsive tweaks
+   ====================== */
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+  .main-content {
+    margin-left: 0;
+    padding: 80px 15px 15px 15px;
+  }
+}
+/* ======================
+   Notification Icon Fix
+   ====================== */
+.notification-dropdown i {
+  color: #1e3a8a !important; /* navy blue */
+  font-size: 3px;
+  transition: color 0.2s ease;
+}
+
+.notification-dropdown i:hover {
+  color: #0f2454 !important; /* darker navy on hover */
+}
+/* Make logout button stand out even when not hovered */
+.btn-outline-blue {
+  color: #0f0cc4b3; /* blue text */
+  border: 2px solid #0f0cc4b3;
+  background-color: transparent;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-blue:hover {
+  background-color: #0f0cc4b3;
+  color: white;
+}

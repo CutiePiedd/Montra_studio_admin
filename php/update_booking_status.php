@@ -25,6 +25,26 @@ if ($action === 'reject') {
     $stmt->bind_param("i", $booking_id);
     $stmt->execute();
     $stmt->close();
+
+    // 📨 Create user notification for rejection
+    $stmtUserNotif = $conn->prepare("
+        SELECT user_id FROM bookings WHERE id = ? LIMIT 1
+    ");
+    $stmtUserNotif->bind_param("i", $booking_id);
+    $stmtUserNotif->execute();
+    $resUser = $stmtUserNotif->get_result();
+
+    if ($resUser->num_rows === 1) {
+        $userRow = $resUser->fetch_assoc();
+        $user_id = $userRow['user_id'];
+        $notifMsg = "❌ Your booking request has been rejected.";
+        $stmtInsertNotif = $conn->prepare("INSERT INTO notifications_user (user_id, message) VALUES (?, ?)");
+        $stmtInsertNotif->bind_param("is", $user_id, $notifMsg);
+        $stmtInsertNotif->execute();
+        $stmtInsertNotif->close();
+    }
+    $stmtUserNotif->close();
+
     header("Location: admin_bookings.php?msg=rejected");
     exit();
 }
@@ -72,7 +92,6 @@ while ($r = $res2->fetch_assoc()) {
     if (strpos($r['addons'] ?? '', 'extended_time') !== false) {
         $occupied[] = $sMin + 30;
     }
-    // check intersection
     foreach ($occupiedSlots as $slot) {
         if (in_array($slot, $occupied)) {
             $conflict = true;
@@ -83,7 +102,6 @@ while ($r = $res2->fetch_assoc()) {
 $stmt2->close();
 
 if ($conflict) {
-    // can't approve due to overlap
     header("Location: admin_bookings.php?error=conflict");
     exit();
 }
@@ -93,13 +111,18 @@ $stmt3 = $conn->prepare("UPDATE bookings SET status='approved' WHERE id = ?");
 $stmt3->bind_param("i", $booking_id);
 $stmt3->execute();
 $stmt3->close();
-//===========================
-// ✅ Create notification automatically
-// ===========================
+
+// ✅ Create admin notification automatically
 require_once '../api/db_connect.php';
 
-// Fetch booking info directly
-$bookingQuery = "SELECT contact_person, package_name, preferred_date FROM bookings WHERE id = ? LIMIT 1";
+// Fetch booking info and corresponding user name
+$bookingQuery = "
+    SELECT b.package_name, b.preferred_date, u.first_name, u.last_name, u.id AS user_id
+    FROM bookings AS b
+    JOIN users AS u ON b.user_id = u.id
+    WHERE b.id = ? 
+    LIMIT 1
+";
 $bookingStmt = $conn->prepare($bookingQuery);
 $bookingStmt->bind_param("i", $booking_id);
 $bookingStmt->execute();
@@ -108,16 +131,23 @@ $booking = $result->fetch_assoc();
 $bookingStmt->close();
 
 if ($booking) {
-    $userFullName = $booking['contact_person'];
+    $userFullName = $booking['first_name'] . ' ' . $booking['last_name'];
     $packageName = $booking['package_name'];
     $bookingDate = date('F j, Y', strtotime($booking['preferred_date']));
     $message = "📸 $userFullName booked the $packageName package for $bookingDate.";
 
     $admin_id = $_SESSION['admin_id'];
-    $stmtNotif = $conn->prepare("INSERT INTO notifications (admin_id, message) VALUES (?, ?)");
-    $stmtNotif->bind_param("is", $admin_id, $message);
+    $stmtNotif = $conn->prepare("INSERT INTO notifications (admin_id, message, booking_id) VALUES (?, ?, ?)");
+    $stmtNotif->bind_param("isi", $admin_id, $message, $booking_id);
     $stmtNotif->execute();
     $stmtNotif->close();
+
+     $user_id = $booking['user_id'];
+    $messageUser = "✅ Your booking for the $packageName package on $bookingDate at $bookingTime has been approved.";
+    $stmtUserNotif = $conn->prepare("INSERT INTO notifications_user (user_id, message, is_read, created_at) VALUES (?, ?, 0, NOW())");
+    $stmtUserNotif->bind_param("is", $user_id, $messageUser);
+    $stmtUserNotif->execute();
+    $stmtUserNotif->close();
 }
 
 header("Location: admin_bookings.php?msg=approved");

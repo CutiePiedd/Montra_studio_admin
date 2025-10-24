@@ -50,11 +50,11 @@ $message = "📸 $userFullName booked the $packageName package for $bookingDate.
 
 // Insert into notifications table
 $admin_id = $_SESSION['admin_id'] ?? 1; // fallback for testing
-$notif = $conn->prepare("INSERT INTO notifications (admin_id, message) VALUES (?, ?)");
+$notif = $conn->prepare("INSERT INTO notifications (admin_id, message, booking_id) VALUES (?, ?, ?)");
 if (!$notif) {
     die("Prepare failed: " . $conn->error);
 }
-$notif->bind_param("is", $admin_id, $message);
+$notif->bind_param("isi", $admin_id, $message, $booking_id);
 
 if ($notif->execute()) {
     echo "✅ Notification added: $message";
