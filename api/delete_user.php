@@ -1,19 +1,37 @@
 <?php
-include('db_connect.php');
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id'])) {
-    $userId = intval($_POST['id']);
+require_once 'db_connect.php';
 
-    $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
-    $stmt->bind_param("i", $userId);
+echo "<pre>";
 
-    if ($stmt->execute()) {
-        echo json_encode(["status" => "success", "message" => "User deleted successfully."]);
-    } else {
-        echo json_encode(["status" => "error", "message" => "Failed to delete user."]);
-    }
-
-    $stmt->close();
-    $conn->close();
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    die("Invalid request method");
 }
+
+if (!isset($_POST['id'])) {
+    die("Missing user ID");
+}
+
+$id = intval($_POST['id']);
+echo "Deleting user ID: $id\n";
+
+$stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
+if (!$stmt) {
+    die("Prepare failed: " . $conn->error);
+}
+
+$stmt->bind_param("i", $id);
+
+if ($stmt->execute()) {
+    echo "User deleted successfully.";
+} else {
+    die("Execute failed: " . $stmt->error);
+}
+
+$stmt->close();
+$conn->close();
+
+echo "\nDone.";
 ?>

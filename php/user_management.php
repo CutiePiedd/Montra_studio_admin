@@ -47,171 +47,156 @@ $notifCount = $notifs->num_rows;
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin | User Management</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Montra Studio | User Management</title>
+  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="../css/dashboard.css">
-  <style>
-    body {
-      background-color: #f8f9fa;
-      font-family: 'Inter', sans-serif;
-    }
-   
-     .content {
-      margin-left: 240px; /* same width as sidebar */
-      padding: 30px;
-      width: calc(100% - 240px);
-    }
-
-    .card {
-      border-radius: 12px;
-      border: none;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }
-
-    table th {
-      background-color: #25384A;
-      color: white;
-    }
-/* Ensure sidebar and navbar don't block modals or dropdowns */
-/* Layering fixes: make navbar visible but allow dropdowns/modals to overlay */
-.custom-navbar { z-index: 1030; position: fixed; top: 0; left: 0; right: 0; }
-.sidebar { z-index: 1020; }
-
-/* Ensure Bootstrap dropdown and modal layers win */
-.dropdown-menu { z-index: 2000 !important; }
-.modal-backdrop { z-index: 2050 !important; }
-.modal { z-index: 2060 !important; }
-
-/* If any element uses pointer-events:none accidentally, restore pointer events for navbar */
-.custom-navbar, .custom-navbar * { pointer-events: auto; }
-  </style>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../css/dashboard-design.css"> 
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
 </head>
 <body>
-<div class="d-flex">
-
-    <!-- Sidebar -->
-    <aside class="sidebar d-flex flex-column flex-shrink-0 p-3">
   
+  <div class="dashboard-wrapper">
+    
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        Montra Studio
+      </div>
+      
       <ul class="nav nav-pills flex-column mb-auto">
-        <br/><br/><br/>
-        <li><a href="dashboard.php" class="nav-link">Dashboard</a></li>
-        <li><a href="user_management.php" class="nav-link active">User Management</a></li>
-        <li><a href="admin_bookings.php" class="nav-link">Bookings</a></li>
-        <li><a href="packages.php" class="nav-link">Packages</a></li>
+        <li><a href="dashboard.php" class="nav-link"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+        <li><a href="user_management.php" class="nav-link active"><i class="fa-solid fa-users"></i> User Management</a></li>
+        <li><a href="admin_bookings.php" class="nav-link"><i class="fa-solid fa-calendar-check"></i> Bookings</a></li>
+        <li><a href="packages.php" class="nav-link"><i class="fa-solid fa-box-archive"></i> Packages</a></li>
+         <li class="nav-item">
+  <a href="admin_chat.php" class="nav-link">
+    <i class="fas fa-comments"></i>
+    <span>Messages</span>
+  </a>
+</li>
+ <li class="nav-item">
+                    <a href="admin_view_album.php" class="nav-link">
+                        <i class="fas fa-images"></i>
+                        <span>Manage Images</span>
+                    </a>
+                </li>
       </ul>
-      <div class="mt-auto">
-        <hr class="text-secondary">
+      
+      <div class="sidebar-footer">
         <form action="logout.php" method="POST">
-          <button class= "btn btn-outline-blue w-100" type="submit">Logout</button>
+          <button class="btn btn-outline-danger" type="submit"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
         </form>
       </div>
     </aside>
 
-    <!-- Main content -->
-    <main class="main-content flex-grow-1">
+    <main class="main-content">
 
-      <!-- Top navbar -->
-<nav class="navbar navbar-dark fixed-top shadow-sm custom-navbar">
-  <div class="container-fluid d-flex justify-content-between align-items-center">
-    
-    <div class="navbar-left">
-      <span class="navbar-title">Montra Studio</span>
-    </div>
+      <nav class="main-header">
+        <div class="header-title">
+          <h2>User Management</h2>
+          <p>View and manage registered users.</p>
+        </div>
 
-    <!-- Right side: Notifications + Profile -->
-    <div class="navbar-right d-flex align-items-center gap-3">
+        <div class="header-actions">
 
-      <!-- Notification icon -->
-      <div class="notification-dropdown position-relative">
-        <i class="fas fa-bell fs-5 text-light"></i>
-        <?php if ($notifCount > 0): ?>
-          <span class="notif-count position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-            <?php echo $notifCount; ?>
-          </span>
-        <?php endif; ?>
+          <div class="search-dropdown position-relative">
+            <i class="fas fa-search icon-btn" id="searchToggle"></i>
+            <div id="searchBox" class="dropdown-content">
+              <form id="searchForm" class="d-flex p-3">
+                <input type="text" id="searchInput" name="query" class="form-control" placeholder="Search..." autocomplete="off">
+              </form>
+              <div id="searchResults" class="px-3 pb-2" style="max-height: 200px; overflow-y: auto;"></div>
+            </div>
+          </div>
+          
+          <div class="notification-dropdown position-relative">
+            <i class="fas fa-bell icon-btn" id="notifToggle"></i>
+            <?php if ($notifCount > 0): ?>
+              <span class="notif-count position-absolute translate-middle badge rounded-pill bg-danger">
+                <?php echo $notifCount; ?>
+              </span>
+            <?php endif; ?>
 
-        <div class="dropdown-content">
-          <?php if ($notifCount === 0): ?>
-            <p class="px-3 py-2 mb-0">No new notifications</p>
-          <?php else: ?>
-            <?php while ($n = $notifs->fetch_assoc()): ?>
-              <div class="notif-item px-3 py-2 border-bottom">
-                <p class="mb-1"><?php echo htmlspecialchars($n['message']); ?></p>
-                <small class="text-muted"><?php echo date('M d, Y h:i A', strtotime($n['created_at'])); ?></small>
+            <div class="dropdown-content">
+              <?php if ($notifCount === 0): ?>
+                <p class="px-3 py-3 mb-0 text-center text-muted">No new notifications</p>
+              <?php else: ?>
+                <?php while ($n = $notifs->fetch_assoc()): ?>
+                  <div class="notif-item px-3 py-2">
+                    <p class="mb-1"><?php echo htmlspecialchars($n['message']); ?></p>
+                    <small class="text-muted"><?php echo date('M d, Y h:i A', strtotime($n['created_at'])); ?></small>
+                  </div>
+                <?php endwhile; ?>
+              <?php endif; ?>
+              <a href="view_all_notifications.php" class="view-all">View all notifications</a>
+            </div>
+          </div>
+          
+          <div class="dropdown">
+            <div class="profile-info" id="adminDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="Admin">
+              <span><?php echo htmlspecialchars($admin['name']); ?></span>
+            </div>
+            
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-2" aria-labelledby="adminDropdown">
+              <li class="dropdown-header text-center">
+                <strong><?php echo htmlspecialchars($admin['name']); ?></strong><br>
+                <small class="text-muted"><?php echo htmlspecialchars($admin['email']); ?></small>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li class="px-3">
+                <p class="mb-1"><small><strong>Address:</strong> <?php echo htmlspecialchars($admin['address'] ?? 'N/A'); ?></small></p>
+                <p class="mb-1"><small><strong>Contact:</strong> <?php echo htmlspecialchars($admin['contact_number'] ?? 'N/A'); ?></small></p>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <button class="dropdown-item text-primary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                  <i class="fas fa-key me-2"></i> Change Password
+                </button>
+              </li>
+            </ul>
+          </div>
+          
+        </div>
+      </nav>
+
+      <div class="container-fluid px-0 mt-4">
+        <div class="row">
+          <div class="col-12">
+            <div class="dash-card">
+              <div class="dash-card-header">
+                <h3>Registered Users</h3>
+                <button class="btn btn-sm btn-outline-primary" id="refreshUsers">
+                  <i class="fas fa-sync-alt me-1"></i> Refresh
+                </button>
               </div>
-            <?php endwhile; ?>
-          <?php endif; ?>
-<a href="view_all_notifications.php" class="view-all">View all notifications</a>
-</div>
 
+              <div class="table-wrapper">
+                <table class="table-borderless bookings-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Full Name</th>
+                      <th>Email</th>
+                      <th>Registered On</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="userTableBody">
+                    <tr><td colspan="5" class="text-center text-muted py-5">Loading users...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <!-- Profile dropdown -->
-      <div class="dropdown">
-  <button id="adminDropdown" data-bs-toggle="dropdown" aria-expanded="false" class="profile-btn">
-    <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" 
-         alt="Admin" width="35" height="35">
-  </button>
-
-  <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="adminDropdown">
-    <li class="dropdown-header text-center">
-      <strong><?php echo htmlspecialchars($admin['name']); ?></strong><br>
-      <small class="text-muted"><?php echo htmlspecialchars($admin['email']); ?></small>
-    </li>
-    <li><hr class="dropdown-divider"></li>
-    <li class="px-3">
-      <p class="mb-1"><strong>Address:</strong> <?php echo htmlspecialchars($admin['address'] ?? 'N/A'); ?></p>
-      <p class="mb-1"><strong>Contact:</strong> <?php echo htmlspecialchars($admin['contact_number'] ?? 'N/A'); ?></p>
-    </li>
-    <li><hr class="dropdown-divider"></li>
-    <li>
-      <button class="dropdown-item text-primary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
-        Change Password
-      </button>
-    </li>
-  </ul>
-</div>
- 
-
-    </div>
-  </div>
-</nav>
- <br/> <br/> <br/> <br/> 
-<div >
-    <h3 class="fw-bold mb-4" style="color:#25384A;">User Management</h3>
-
-    <div class="card p-4">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="fw-bold" style="color:#25384A;">Registered Users</h5>
-        <button class="btn btn-sm btn-outline-secondary" id="refreshUsers">Refresh</button>
-      </div>
-
-      <div class="table-responsive">
-        <table class="table table-hover align-middle">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Full Name</th>
-              <th>Email</th>
-              <th>Registered On</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="userTableBody">
-            <tr><td colspan="5" class="text-center text-muted">Loading users...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
-
-   </main>
-  <!-- Change Password Modal -->
- <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordLabel" aria-hidden="true">
+      
+    </main>
+  </div> <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
@@ -238,82 +223,211 @@ $notifCount = $notifs->num_rows;
       </div>
     </div>
   </div>
- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
   
   <script>
-  document.getElementById("changePasswordForm").addEventListener("submit", function(event) {
-    const newPass = document.getElementById("newPassword").value;
-    const confirmPass = document.getElementById("confirmPassword").value;
-    if (newPass !== confirmPass) {
-      alert("New passwords do not match!");
-      event.preventDefault();
+    // --- Your Page-Specific Scripts ---
+
+    async function loadUsers() {
+      const tbody = document.getElementById('userTableBody');
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-5">Loading users...</td></tr>';
+      
+      const response = await fetch('../api/fetch_users.php');
+      const users = await response.json();
+      
+      tbody.innerHTML = ''; // Clear loading message
+
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-5">No users found.</td></tr>';
+        return;
+      }
+
+      users.forEach((user, index) => {
+        const row = document.createElement('tr');
+        // Format date nicely
+        const regDate = new Date(user.created_at).toLocaleDateString('en-US', {
+          year: 'numeric', month: 'short', day: 'numeric'
+        });
+
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${user.first_name} ${user.last_name}</td>
+          <td>${user.email}</td>
+          <td>${regDate}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${user.id})">
+              <i class="fas fa-trash-alt"></i> Delete
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
     }
-  });
+
+    function deleteUser(id) {
+  if (confirm("Are you sure you want to delete this user?")) {
+    fetch('../api/delete_user.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: 'id=' + encodeURIComponent(id)
+    })
+    .then(response => response.json())
+    .then(result => {
+      alert(result.message);
+      if (result.success) {
+        loadUsers(); // reload the table
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+}
+
+
+    document.getElementById('refreshUsers').addEventListener('click', loadUsers);
+    window.onload = loadUsers;
+
+
+    // --- Theme Scripts (for topbar and password modal) ---
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // --- Password Form Validation ---
+      const changePasswordForm = document.getElementById("changePasswordForm");
+      if(changePasswordForm) {
+        changePasswordForm.addEventListener("submit", function(event) {
+          const newPass = document.getElementById("newPassword").value;
+          const confirmPass = document.getElementById("confirmPassword").value;
+          if (newPass !== confirmPass) {
+            alert("New passwords do not match!");
+            event.preventDefault();
+          }
+        });
+      }
+
+      // --- Dropdown Toggles ---
+      const notifToggle = document.getElementById('notifToggle');
+      const notifDropdown = document.querySelector('.notification-dropdown');
+      if(notifToggle) {
+        notifToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          notifDropdown.classList.toggle('show');
+          // Close other dropdowns
+          document.querySelector('.search-dropdown').classList.remove('show');
+        });
+      }
+      
+      const searchToggle = document.getElementById('searchToggle');
+      const searchDropdown = document.querySelector('.search-dropdown');
+      if(searchToggle) {
+        searchToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          searchDropdown.classList.toggle('show');
+          document.getElementById('searchInput').focus();
+          // Close other dropdowns
+          document.querySelector('.notification-dropdown').classList.remove('show');
+        });
+      }
+
+      // Close dropdowns if clicking outside
+      document.addEventListener('click', (e) => {
+        if (notifDropdown && !notifDropdown.contains(e.target)) {
+          notifDropdown.classList.remove('show');
+        }
+        if (searchDropdown && !searchDropdown.contains(e.target)) {
+          searchDropdown.classList.remove('show');
+        }
+      });
+
+      // --- Search Handler ---
+      const searchInput = document.getElementById('searchInput');
+      if(searchInput) {
+        searchInput.addEventListener('input', function() {
+          const query = this.value.trim();
+          const resultsDiv = document.getElementById('searchResults');
+
+          if (query.length < 2) {
+            resultsDiv.innerHTML = '';
+            return;
+          }
+
+          fetch('search_handler.php?q=' + encodeURIComponent(query))
+            .then(response => response.json())
+            .then(data => {
+              if (data.length === 0) {
+                resultsDiv.innerHTML = '<p class="text-muted p-2">No results found.</p>';
+              } else {
+                resultsDiv.innerHTML = data.map(item =>
+                  `<div class="p-2 border-bottom" style="cursor: pointer;"><strong>${item.type}</strong>: ${item.name}</div>`
+                ).join('');
+              }
+            })
+            .catch(err => console.error(err));
+        });
+      }
+    });
   </script>
 <script>
-async function loadUsers() {
-  const response = await fetch('../api/fetch_users.php');
-  const users = await response.json();
-  
-  const tbody = document.getElementById('userTableBody');
-  tbody.innerHTML = '';
-
-  if (users.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No users found.</td></tr>';
-    return;
-  }
-
-  users.forEach((user, index) => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${index + 1}</td>
-      <td>${user.first_name} ${user.last_name}</td>
-      <td>${user.email}</td>
-      <td>${new Date(user.created_at).toLocaleString()}</td>
-      <td>
-        <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id})">Delete</button>
-      </td>
-    `;
-    tbody.appendChild(row);
-  });
-}
-
-async function deleteUser(id) {
-  if (!confirm("Are you sure you want to delete this user?")) return;
-
-  const formData = new FormData();
-  formData.append('id', id);
-
-  const response = await fetch('../api/delete_user.php', {
-    method: 'POST',
-    body: formData
-  });
-  const result = await response.json();
-  alert(result.message);
-  loadUsers();
-}
-
-document.getElementById('refreshUsers').addEventListener('click', loadUsers);
-window.onload = loadUsers;
-</script>
-<script>
 document.addEventListener('DOMContentLoaded', () => {
-  const notifIcon = document.querySelector('.notification-dropdown i');
-  const notifDropdown = document.querySelector('.notification-dropdown');
+  const searchInput = document.getElementById('searchInput');
+  const searchResults = document.getElementById('searchResults');
+  const searchBox = document.getElementById('searchBox');
+  const searchToggle = document.getElementById('searchToggle');
 
-  notifIcon.addEventListener('click', () => {
-    notifDropdown.classList.toggle('show');
+  // Toggle search dropdown visibility
+  searchToggle.addEventListener('click', () => {
+    searchBox.classList.toggle('show');
+    searchInput.focus();
   });
 
-  // Close dropdown if clicking outside
+  // Close search dropdown when clicking outside
   document.addEventListener('click', (e) => {
-    if (!notifDropdown.contains(e.target)) {
-      notifDropdown.classList.remove('show');
+    if (!searchBox.contains(e.target)) {
+      searchBox.classList.remove('show');
+    }
+  });
+
+  // Live search
+  searchInput.addEventListener('input', async () => {
+    const query = searchInput.value.trim();
+
+    if (query.length < 2) {
+      searchResults.innerHTML = '<p class="text-muted px-2 py-1">Type to search...</p>';
+      return;
+    }
+
+    try {
+      const response = await fetch(`../php/admin_search.php?query=${encodeURIComponent(query)}`);
+      const text = await response.text(); // for debugging
+      // console.log(text); // uncomment to check raw output
+
+      const data = JSON.parse(text);
+
+      if (data.error) {
+        searchResults.innerHTML = `<p class="text-danger px-2 py-1">Error: ${data.error}</p>`;
+        return;
+      }
+
+      if (data.length === 0) {
+        searchResults.innerHTML = '<p class="text-muted px-2 py-1">No results found</p>';
+        return;
+      }
+
+      searchResults.innerHTML = data.map(item => `
+        <div class="search-item py-2 border-bottom">
+          <a href="${item.link}" class="text-decoration-none text-dark d-block">
+            <strong>${item.label}</strong>
+            <small class="d-block text-muted">${item.type} — ${item.sub}</small>
+          </a>
+        </div>
+      `).join('');
+    } catch (err) {
+      console.error(err);
+      searchResults.innerHTML = '<p class="text-danger px-2 py-1">Error fetching results</p>';
     }
   });
 });
 </script>
-
-
 </body>
 </html>

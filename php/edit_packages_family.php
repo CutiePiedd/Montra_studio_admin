@@ -4,9 +4,10 @@ require_once '../api/db_connect.php';
 
 // Ensure only admin can access
 if (!isset($_SESSION['admin_id'])) {
-  header("Location: login.php");
-  exit();
+    header("Location: login.php");
+    exit();
 }
+
 $adminName = $_SESSION['admin_name'];
 $admin_id = $_SESSION['admin_id'];
 
@@ -33,91 +34,58 @@ if ($stmt) {
 } else {
     die("Query failed: " . $conn->error);
 }
-// Fetch current package data
-$id = 1; // assuming this is the Couple package
+
+// Fetch current package data from 'packages_family'
+$id = 1; // ID for the Family package
 $result = mysqli_query($conn, "SELECT * FROM packages_family WHERE id=$id");
 $package = mysqli_fetch_assoc($result);
 
+// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $name = mysqli_real_escape_string($conn, $_POST['name']);
-  $description = mysqli_real_escape_string($conn, $_POST['description']);
-  $price = $_POST['price'];
-  $includes = mysqli_real_escape_string($conn, $_POST['includes']);
+    $name = mysqli_real_escape_string($conn, $_POST['name']);
+    $description = mysqli_real_escape_string($conn, $_POST['description']);
+    $price = $_POST['price'];
+    $includes = mysqli_real_escape_string($conn, $_POST['includes']);
 
-  // Handle main image upload
-  $main_image = $package['main_image']; // keep existing if none uploaded
-  if (!empty($_FILES['main_image']['name'])) {
-    $target_dir = "../../montra_website/uploads/";
-    $filename = time() . "_" . basename($_FILES["main_image"]["name"]);
-    move_uploaded_file($_FILES["main_image"]["tmp_name"], $target_dir . $filename);
-    $main_image = $filename;
-  }
-
-  // Handle new image uploads (optional)
-  $images = $package['images'];
-  if (!empty($_FILES['images']['name'][0])) {
-    $uploaded = [];
-    $target_dir = "../../montra_website/uploads/";
-
-    foreach ($_FILES['images']['tmp_name'] as $key => $tmp_name) {
-      $filename = time() . "_" . basename($_FILES["images"]["name"][$key]);
-      move_uploaded_file($tmp_name, $target_dir . $filename);
-      $uploaded[] = $filename;
+    // Handle main image upload
+    $main_image = $package['main_image'];
+    if (!empty($_FILES['main_image']['name'])) {
+        $target_dir = "../../montra_website/uploads/"; // Using your provided path
+        $filename = time() . "_" . basename($_FILES["main_image"]["name"]);
+        move_uploaded_file($_FILES["main_image"]["tmp_name"], $target_dir . $filename);
+        $main_image = $filename;
     }
-    $existing = !empty($package['images']) ? explode(",", $package['images']) : [];
-    $images = implode(",", array_merge($existing, $uploaded));
-  }
 
-  $update = "UPDATE packages_family 
-           SET name='$name', description='$description', price='$price', includes='$includes', 
-               images='$images', main_image='$main_image'
-           WHERE id=$id";
+    // Handle new image uploads (optional)
+    $images = $package['images'];
+    if (!empty($_FILES['images']['name'][0])) {
+        $uploaded = [];
+        $target_dir = "../../montra_website/uploads/"; // Using your provided path
+        foreach ($_FILES['images']['tmp_name'] as $key => $tmp_name) {
+            $filename = time() . "_" . basename($_FILES["images"]["name"][$key]);
+            move_uploaded_file($tmp_name, $target_dir . $filename);
+            $uploaded[] = $filename;
+        }
+        $existing = !empty($package['images']) ? explode(",", $package['images']) : [];
+        $images = implode(",", array_merge($existing, $uploaded));
+    }
 
-  if (mysqli_query($conn, $update)) {
-    header("Location: edit_packages_family.php?success=1");
-    exit();
-  } else {
-    echo "Error: " . mysqli_error($conn);
-  }
-}
-$packageLabels = [];
-$packageCounts = [];
+    // Update the 'packages_family' table
+    $update = "UPDATE packages_family 
+               SET name='$name', description='$description', price='$price', includes='$includes', 
+                   images='$images', main_image='$main_image'
+               WHERE id=$id";
 
-$packageSql = "SELECT package_name, COUNT(*) AS total FROM bookings GROUP BY package_name ORDER BY total DESC";
-$result = $conn->query($packageSql);
-
-if ($result) {
-    while ($row = $result->fetch_assoc()) {
-        $packageLabels[] = $row['package_name'];
-        $packageCounts[] = intval($row['total']);
+    if (mysqli_query($conn, $update)) {
+        // Redirect back to this page
+        header("Location: edit_packages_family.php?success=1");
+        exit();
+    } else {
+        echo "Error: " . mysqli_error($conn);
     }
 }
 
-// Convert to JSON for Chart.js
-$packageLabelsJson = json_encode($packageLabels);
-$packageCountsJson = json_encode($packageCounts);
-
-// Fetch 5 upcoming bookings approved by admin
-$recentBookingsSql = "
-    SELECT b.id, u.first_name, u.last_name, b.package_name, b.preferred_date, b.status
-    FROM bookings AS b
-    JOIN users AS u ON b.user_id = u.id
-    WHERE b.status = 'approved' 
-      AND b.preferred_date >= CURDATE() - INTERVAL 7 DAY
-    ORDER BY b.preferred_date DESC
-    LIMIT 5
-";
-
-$recentBookingsResult = $conn->query($recentBookingsSql);
-$recentBookings = [];
-if ($recentBookingsResult) {
-    while ($row = $recentBookingsResult->fetch_assoc()) {
-        $recentBookings[] = $row;
-    }
-}
-
-
-
+// Fetch notifications for topbar
 $notifQuery = "SELECT id, message, created_at FROM notifications WHERE admin_id = ? ORDER BY created_at DESC LIMIT 10";
 $stmt = $conn->prepare($notifQuery);
 $stmt->bind_param("i", $admin_id);
@@ -129,224 +97,282 @@ header("Cache-Control: no-cache, no-store, must-revalidate");
 header("Pragma: no-cache");
 header("Expires: 0");
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edit Family Package | Montra Studio</title>
+  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="../css/dashboard.css">
+  
+  <link rel="stylesheet" href="../css/dashboard-design.css"> 
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
+  
   <style>
-    .form-card {
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-      padding: 30px;
-    }
     .image-preview {
-      border-radius: 12px;
+      width: 100%;
+      height: 250px;
+      border: 2px dashed var(--border-color);
+      border-radius: var(--card-radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       overflow: hidden;
-      margin-bottom: 15px;
+      background-color: #fcfcfc;
     }
     .image-preview img {
       width: 100%;
-      height: 200px;
+      height: 100%;
       object-fit: cover;
+    }
+    .gallery-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
     }
     .gallery-img {
       position: relative;
-      display: inline-block;
-      margin: 10px;
-    }
-    .gallery-img img {
       width: 120px;
       height: 100px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .gallery-img img {
+      width: 100%;
+      height: 100%;
       object-fit: cover;
-      border-radius: 10px;
     }
     .delete-btn {
       position: absolute;
-      top: 4px;
-      right: 4px;
-      background: rgba(255, 0, 0, 0.8);
+      top: 5px;
+      right: 5px;
+      background: rgba(220, 53, 69, 0.9);
       color: white;
       border: none;
-      border-radius: 4px;
-      padding: 2px 6px;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: 12px;
+      font-weight: bold;
       cursor: pointer;
+      text-decoration: none;
+      line-height: 1;
+      transition: all 0.2s ease;
     }
-/* Ensure sidebar and navbar don't block modals or dropdowns */
-/* Layering fixes: make navbar visible but allow dropdowns/modals to overlay */
-.custom-navbar { z-index: 1030; position: fixed; top: 0; left: 0; right: 0; }
-.sidebar { z-index: 1020; }
-
-/* Ensure Bootstrap dropdown and modal layers win */
-.dropdown-menu { z-index: 2000 !important; }
-.modal-backdrop { z-index: 2050 !important; }
-.modal { z-index: 2060 !important; }
-
-/* If any element uses pointer-events:none accidentally, restore pointer events for navbar */
-.custom-navbar, .custom-navbar * { pointer-events: auto; }
-
-
+    .delete-btn:hover {
+      background: rgba(220, 53, 69, 1);
+      transform: scale(1.1);
+    }
   </style>
 </head>
 <body>
-
-  <!-- SIDEBAR -->
-  <aside class="sidebar d-flex flex-column flex-shrink-0 p-3">
-    <h4 class="fw-bold mb-4 ps-2 text-dark">Montra Studio</h4>
-    <ul class="nav nav-pills flex-column mb-auto">
-      <li><a href="dashboard.php" class="nav-link">Dashboard</a></li>
-      <li><a href="user_management.php" class="nav-link">User Management</a></li>
-      <li><a href="admin_bookings.php" class="nav-link">Bookings</a></li>
-      <li><a href="packages.php" class="nav-link active">Packages</a></li>
-    </ul>
-    <div class="mt-auto">
-      <hr class="text-secondary">
-      <form action="logout.php" method="POST">
-        <button class="btn btn-outline-blue w-100" type="submit">Logout</button>
-      </form>
-    </div>
-  </aside>
-  <!-- Main Content -->
-   <main class="main-content">
-     <!-- TOP NAVBAR -->
-   <nav class="navbar navbar-dark fixed-top shadow-sm custom-navbar">
-  <div class="container-fluid d-flex justify-content-between align-items-center">
+  
+  <div class="dashboard-wrapper">
     
-    <div class="navbar-left">
-      <span class="navbar-title">Montra Studio</span>
-    </div>
-
-    <!-- Right side: Notifications + Profile -->
-    <div class="navbar-right d-flex align-items-center gap-3">
-
-      <!-- Notification icon -->
-      <div class="notification-dropdown position-relative">
-        <i class="fas fa-bell fs-5 text-light"></i>
-        <?php if ($notifCount > 0): ?>
-          <span class="notif-count position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-            <?php echo $notifCount; ?>
-          </span>
-        <?php endif; ?>
-
-        <div class="dropdown-content">
-          <?php if ($notifCount === 0): ?>
-            <p class="px-3 py-2 mb-0">No new notifications</p>
-          <?php else: ?>
-            <?php while ($n = $notifs->fetch_assoc()): ?>
-              <div class="notif-item px-3 py-2 border-bottom">
-                <p class="mb-1"><?php echo htmlspecialchars($n['message']); ?></p>
-                <small class="text-muted"><?php echo date('M d, Y h:i A', strtotime($n['created_at'])); ?></small>
-              </div>
-            <?php endwhile; ?>
-          <?php endif; ?>
-<a href="view_all_notifications.php" class="view-all">View all notifications</a>
-</div>
-
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        Montra Studio
       </div>
-      <!-- Profile dropdown -->
-<div class="dropdown">
-  <button id="adminDropdown" data-bs-toggle="dropdown" aria-expanded="false" class="profile-btn">
-    <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" 
-         alt="Admin" width="35" height="35">
-  </button>
+      
+      <ul class="nav nav-pills flex-column mb-auto">
+        <li><a href="dashboard.php" class="nav-link"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+        <li><a href="user_management.php" class="nav-link"><i class="fa-solid fa-users"></i> User Management</a></li>
+        <li><a href="admin_bookings.php" class="nav-link"><i class="fa-solid fa-calendar-check"></i> Bookings</a></li>
+        <li><a href="packages.php" class="nav-link active"><i class="fa-solid fa-box-archive"></i> Packages</a></li>
+        <li class="nav-item">
+  <a href="admin_chat.php" class="nav-link">
+    <i class="fas fa-comments"></i>
+    <span>Messages</span>
+  </a>
+</li>
+ <li class="nav-item">
+                    <a href="admin_view_album.php" class="nav-link">
+                        <i class="fas fa-images"></i>
+                        <span>Manage Images</span>
+                    </a>
+                </li>
+      </ul>
+      
+      <div class="sidebar-footer">
+        <form action="logout.php" method="POST">
+          <button class="btn btn-outline-danger" type="submit"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+        </form>
+      </div>
+    </aside>
 
-  <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="adminDropdown">
-    <li class="dropdown-header text-center">
-      <strong><?php echo htmlspecialchars($admin['name']); ?></strong><br>
-      <small class="text-muted"><?php echo htmlspecialchars($admin['email']); ?></small>
-    </li>
-    <li><hr class="dropdown-divider"></li>
-    <li class="px-3">
-      <p class="mb-1"><strong>Address:</strong> <?php echo htmlspecialchars($admin['address'] ?? 'N/A'); ?></p>
-      <p class="mb-1"><strong>Contact:</strong> <?php echo htmlspecialchars($admin['contact_number'] ?? 'N/A'); ?></p>
-    </li>
-    <li><hr class="dropdown-divider"></li>
-    <li>
-      <button class="dropdown-item text-primary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
-        Change Password
-      </button>
-    </li>
-  </ul>
-</div>
- 
+    <main class="main-content">
 
-    </div>
-  </div>
-</nav>
-    <!-- PAGE CONTENT -->
- 
-    
-           <br/><br/><h2 class="fw-semibold mb-4">Edit “Family” Package</h2>
+      <nav class="main-header">
+        <div class="header-title">
+          <h2>Edit Package</h2>
+          <p>Editing "<?php echo htmlspecialchars($package['name']); ?>"</p>
+        </div>
 
+        <div class="header-actions">
+
+          <div class="search-dropdown position-relative">
+            <i class="fas fa-search icon-btn" id="searchToggle"></i>
+            <div id="searchBox" class="dropdown-content">
+              <form id="searchForm" class="d-flex p-3">
+                <input type="text" id="searchInput" name="query" class="form-control" placeholder="Search..." autocomplete="off">
+              </form>
+              <div id="searchResults" class="px-3 pb-2" style="max-height: 200px; overflow-y: auto;"></div>
+            </div>
+          </div>
+          
+          <div class="notification-dropdown position-relative">
+            <i class="fas fa-bell icon-btn" id="notifToggle"></i>
+            <?php if ($notifCount > 0): ?>
+              <span class="notif-count position-absolute translate-middle badge rounded-pill bg-danger">
+                <?php echo $notifCount; ?>
+              </span>
+            <?php endif; ?>
+
+            <div class="dropdown-content">
+              <?php if ($notifCount === 0): ?>
+                <p class="px-3 py-3 mb-0 text-center text-muted">No new notifications</p>
+              <?php else: ?>
+                <?php while ($n = $notifs->fetch_assoc()): ?>
+                  <div class="notif-item px-3 py-2">
+                    <p class="mb-1"><?php echo htmlspecialchars($n['message']); ?></p>
+                    <small class="text-muted"><?php echo date('M d, Y h:i A', strtotime($n['created_at'])); ?></small>
+                  </div>
+                <?php endwhile; ?>
+              <?php endif; ?>
+              <a href="view_all_notifications.php" class="view-all">View all notifications</a>
+            </div>
+          </div>
+          
+          <div class="dropdown">
+            <div class="profile-info" id="adminDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="Admin">
+              <span><?php echo htmlspecialchars($admin['name']); ?></span>
+            </div>
+            
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-2" aria-labelledby="adminDropdown">
+              <li class="dropdown-header text-center">
+                <strong><?php echo htmlspecialchars($admin['name']); ?></strong><br>
+                <small class="text-muted"><?php echo htmlspecialchars($admin['email']); ?></small>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li class="px-3">
+                <p class="mb-1"><small><strong>Address:</strong> <?php echo htmlspecialchars($admin['address'] ?? 'N/A'); ?></small></p>
+                <p class="mb-1"><small><strong>Contact:</strong> <?php echo htmlspecialchars($admin['contact_number'] ?? 'N/A'); ?></small></p>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <button class="dropdown-item text-primary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                  <i class="fas fa-key me-2"></i> Change Password
+                </button>
+              </li>
+            </ul>
+          </div>
+          
+        </div>
+      </nav>
+
+      <div class="container-fluid px-0 mt-4">
+        
         <?php if (isset($_GET['success'])): ?>
           <div class="alert alert-success">Package updated successfully!</div>
         <?php endif; ?>
 
-        <div class="form-card">
-          <form method="POST" enctype="multipart/form-data">
-            <div class="mb-3">
-              <label class="form-label">Package Name</label>
-              <input type="text" class="form-control" name="name" value="<?= htmlspecialchars($package['name']) ?>" required>
-            </div>
+        <form method="POST" enctype="multipart/form-data">
+          <div class="row">
 
-            <div class="mb-3">
-              <label class="form-label">Description</label>
-              <textarea class="form-control" name="description" rows="5" required><?= htmlspecialchars($package['description']) ?></textarea>
-            </div>
+            <div class="col-lg-7 mb-4">
+              <div class="dash-card h-100">
+                <div class="dash-card-header">
+                  <h3>Package Details</h3>
+                </div>
+                <div class="card-body p-4">
+                  <div class="mb-3">
+                    <label class="form-label">Package Name</label>
+                    <input type="text" class="form-control" name="name" value="<?= htmlspecialchars($package['name']) ?>" required>
+                  </div>
 
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Price</label>
-                <input type="number" class="form-control" name="price" step="0.01" value="<?= $package['price'] ?>" required>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Includes</label>
-                <textarea class="form-control" name="includes" rows="3" required><?= htmlspecialchars($package['includes']) ?></textarea>
-              </div>
-            </div>
+                  <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" name="description" rows="5" required><?= htmlspecialchars($package['description']) ?></textarea>
+                  </div>
 
-            <div class="mb-4">
-              <label class="form-label">Main Image</label>
-              <div class="image-preview mb-2">
-                <img src="http://localhost/montra_website/uploads/<?= htmlspecialchars($package['main_image']) ?>" alt="Main Image">
-              </div>
-              <input type="file" class="form-control" name="main_image">
-            </div>
-
-            <div class="mb-4">
-              <label class="form-label">Add More Images</label>
-              <input type="file" class="form-control mb-3" name="images[]" multiple>
-              <div>
-                <?php 
-                $imgs = explode(",", $package['images']);
-                foreach ($imgs as $img):
-                  $img = trim($img);
-                  if ($img): ?>
-                    <div class="gallery-img">
-                      <img src="http://localhost/montra_website/uploads/<?= htmlspecialchars($img) ?>" alt="Package Image">
-                      <a href="delete_image_family.php?package_id=<?= $package['id'] ?>&filename=<?= urlencode($img) ?>" 
-                         onclick="return confirm('Are you sure you want to delete this image?');" 
-                         class="delete-btn">✕</a>
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">Price</label>
+                      <input type="number" class="form-control" name="price" step="0.01" value="<?= $package['price'] ?>" required>
                     </div>
-                  <?php endif;
-                endforeach; ?>
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">Includes (one per line)</label>
+                      <textarea class="form-control" name="includes" rows="3" required><?= htmlspecialchars($package['includes']) ?></textarea>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <button type="submit" class="btn btn-primary px-4 py-2">Save Changes</button>
-          </form>
-        </div>
-   
-    </main>
- <!-- Change Password Modal -->
-   <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordLabel" aria-hidden="true">
+            <div class="col-lg-5 mb-4">
+              <div class="dash-card h-100">
+                <div class="dash-card-header">
+                  <h3>Manage Images</h3>
+                </div>
+                <div class="card-body p-4">
+                  <div class="mb-4">
+                    <label class="form-label">Main Image (Cover Photo)</label>
+                    <div class="image-preview mb-2">
+                      <img src="http://localhost/montra_website/uploads/<?= htmlspecialchars($package['main_image']) ?>" alt="Main Image" id="mainImagePreview">
+                    </div>
+                    <input type="file" class="form-control" name="main_image" onchange="previewMainImage(event)">
+                  </div>
+
+                  <div class="mb-4">
+                    <label class="form-label">Add More Gallery Images</label>
+                    <input type="file" class="form-control mb-3" name="images[]" multiple>
+                    <label class="form-label">Current Gallery</label>
+                    <div class="gallery-wrapper">
+                      <?php 
+                      $imgs = explode(",", $package['images']);
+                      foreach ($imgs as $img):
+                        $img = trim($img);
+                        if ($img): ?>
+                          <div class="gallery-img">
+                            <img src="http://localhost/montra_website/uploads/<?= htmlspecialchars($img) ?>" alt="Package Image">
+                            <a href="delete_image_family.php?package_id=<?= $package['id'] ?>&filename=<?= urlencode($img) ?>" 
+                               onclick="return confirm('Are you sure you want to delete this image?');" 
+                               class="delete-btn">✕</a>
+                          </div>
+                        <?php endif;
+                      endforeach; ?>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+          </div> <div class="row">
+            <div class="col-12">
+              <div class="dash-card">
+                <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                  <a href="packages.php" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i> Cancel
+                  </a>
+                  <button type="submit" class="btn btn-primary btn-lg px-5">
+                    <i class="fas fa-save me-2"></i> Save Changes
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+        </form>
+      </div> </main>
+  </div> <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
@@ -373,36 +399,91 @@ header("Expires: 0");
       </div>
     </div>
   </div>
- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
   
   <script>
-  document.getElementById("changePasswordForm").addEventListener("submit", function(event) {
-    const newPass = document.getElementById("newPassword").value;
-    const confirmPass = document.getElementById("confirmPassword").value;
-    if (newPass !== confirmPass) {
-      alert("New passwords do not match!");
-      event.preventDefault();
-    }
-  });
-  </script>
-<script>
-  // Handle notification dropdown toggle
-  document.addEventListener("DOMContentLoaded", () => {
-    const notifIcon = document.querySelector(".notification-dropdown i");
-    const notifDropdown = document.querySelector(".notification-dropdown");
-
-    notifIcon.addEventListener("click", (e) => {
-      e.stopPropagation();
-      notifDropdown.classList.toggle("show");
-    });
-
-    // Close dropdown when clicking outside
-    document.addEventListener("click", (e) => {
-      if (!notifDropdown.contains(e.target)) {
-        notifDropdown.classList.remove("show");
+    // --- Your Page-Specific Scripts ---
+    document.getElementById("changePasswordForm").addEventListener("submit", function(event) {
+      const newPass = document.getElementById("newPassword").value;
+      const confirmPass = document.getElementById("confirmPassword").value;
+      if (newPass !== confirmPass) {
+        alert("New passwords do not match!");
+        event.preventDefault();
       }
     });
-  });
-</script>
 
+    function previewMainImage(event) {
+      const reader = new FileReader();
+      reader.onload = function(){
+        const preview = document.getElementById('mainImagePreview');
+        preview.src = reader.result;
+      }
+      reader.readAsDataURL(event.target.files[0]);
+    }
+
+    // --- Theme Scripts (for topbar) ---
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // --- Dropdown Toggles ---
+      const notifToggle = document.getElementById('notifToggle');
+      const notifDropdown = document.querySelector('.notification-dropdown');
+      if(notifToggle) {
+        notifToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          notifDropdown.classList.toggle('show');
+          document.querySelector('.search-dropdown').classList.remove('show');
+        });
+      }
+      
+      const searchToggle = document.getElementById('searchToggle');
+      const searchDropdown = document.querySelector('.search-dropdown');
+      if(searchToggle) {
+        searchToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          searchDropdown.classList.toggle('show');
+          document.getElementById('searchInput').focus();
+          document.querySelector('.notification-dropdown').classList.remove('show');
+        });
+      }
+
+      // Close dropdowns if clicking outside
+      document.addEventListener('click', (e) => {
+        if (notifDropdown && !notifDropdown.contains(e.target)) {
+          notifDropdown.classList.remove('show');
+        }
+        if (searchDropdown && !searchDropdown.contains(e.target)) {
+          searchDropdown.classList.remove('show');
+        }
+      });
+
+      // --- Search Handler ---
+      const searchInput = document.getElementById('searchInput');
+      if(searchInput) {
+        searchInput.addEventListener('input', function() {
+          const query = this.value.trim();
+          const resultsDiv = document.getElementById('searchResults');
+
+          if (query.length < 2) {
+            resultsDiv.innerHTML = '';
+            return;
+          }
+
+          fetch('search_handler.php?q=' + encodeURIComponent(query))
+            .then(response => response.json())
+            .then(data => {
+              if (data.length === 0) {
+                resultsDiv.innerHTML = '<p class="text-muted p-2">No results found.</p>';
+              } else {
+                resultsDiv.innerHTML = data.map(item =>
+                  `<div class="p-2 border-bottom" style="cursor: pointer;"><strong>${item.type}</strong>: ${item.name}</div>`
+                ).join('');
+              }
+            })
+            .catch(err => console.error(err));
+        });
+      }
+    });
+  </script>
+
+</body>
 </html>

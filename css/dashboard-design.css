@@ -1,0 +1,452 @@
+/* --- Import a modern font (optional, but matches the look) --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* --- CSS Variables for easy themeing --- */
+:root {
+  --sidebar-bg: #FFFFFF;
+  --main-bg: #F6F7FB;
+  --card-bg: #FFFFFF;
+  --text-primary: #1F2329;
+  --text-secondary: #6B7280;
+  --accent-color: #3498DB; /* Your brand's blue */
+  --accent-light: #EBF5FB;
+  --border-color: #E5E7EB;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  --card-radius: 20px;
+}
+
+/* --- General Layout --- */
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--main-bg);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.dashboard-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* --- Sidebar --- */
+.sidebar {
+  width: 260px;
+  background-color: var(--sidebar-bg);
+  padding: 24px;
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  box-shadow: var(--shadow);
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+.sidebar-header {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent-color);
+  padding: 0 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.sidebar .nav-pills .nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.sidebar .nav-pills .nav-link i {
+  width: 20px;
+  text-align: center;
+}
+
+.sidebar .nav-pills .nav-link:hover {
+  background-color: var(--accent-light);
+  color: var(--accent-color);
+}
+
+.sidebar .nav-pills .nav-link.active {
+  background-color: var(--accent-color);
+  color: #FFFFFF;
+  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+}
+
+.sidebar-footer {
+  margin-top: auto;
+}
+
+.sidebar-footer .btn {
+  width: 100%;
+  border-radius: 12px;
+  padding: 12px;
+  font-weight: 600;
+}
+
+/* --- Main Content Area --- */
+.main-content {
+  flex-grow: 1;
+  padding: 24px 40px;
+  overflow-y: auto;
+}
+
+/* --- Main Header (Top Bar) --- */
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.header-title h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.header-title p {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.icon-btn {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.icon-btn:hover {
+  color: var(--text-primary);
+}
+
+/* --- Notification & Search Dropdowns --- */
+.notification-dropdown, .search-dropdown {
+  position: relative;
+}
+
+.notif-count {
+  font-size: 0.65rem;
+  padding: 2px 5px;
+  top: -2px !important;
+  right: -5px !important;
+  left: auto !important;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  top: 150%;
+  right: 0;
+  background-color: var(--card-bg);
+  min-width: 300px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.notification-dropdown.show .dropdown-content,
+.search-dropdown.show .dropdown-content {
+  display: block;
+}
+
+/* Re-style existing notification items */
+.notif-item {
+  border-bottom: 1px solid var(--border-color);
+}
+.notif-item p { margin-bottom: 4px; }
+.notif-item small { color: var(--text-secondary); }
+.view-all {
+  display: block;
+  text-align: center;
+  padding: 12px;
+  background-color: #f9f9f9;
+  color: var(--accent-color);
+  font-weight: 600;
+  text-decoration: none;
+}
+.view-all:hover { background-color: #f1f1f1; }
+
+/* Re-style search dropdown */
+#searchBox { padding: 1rem; }
+#searchResults { max-height: 250px; overflow-y: auto; }
+
+/* --- Profile Info --- */
+.profile-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  background-color: var(--card-bg);
+  padding: 6px 12px 6px 6px;
+  border-radius: 30px;
+  border: 1px solid var(--border-color);
+}
+
+.profile-info img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+
+.profile-info span {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* --- Dashboard Cards --- */
+.dash-card {
+  background-color: var(--card-bg);
+  border-radius: var(--card-radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  height: 100%;
+  margin-bottom: 1.5rem; /* Replaces g-4 */
+}
+
+.dash-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.dash-card-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.dash-card-header a {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--accent-color);
+  text-decoration: none;
+}
+
+/* --- Stat Cards (The small ones) --- */
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.stat-card .icon-wrapper {
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+/* Colors for icons */
+.stat-card .icon-wrapper.bg-blue {
+  background-color: var(--accent-light);
+  color: var(--accent-color);
+}
+.stat-card .icon-wrapper.bg-green {
+  background-color: #E8F5E9;
+  color: #4CAF50;
+}
+.stat-card .icon-wrapper.bg-yellow {
+  background-color: #FFFDE7;
+  color: #FBC02D;
+}
+
+.stat-card-content h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.stat-card-content p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Adjust as needed */
+}
+
+/* --- Table Card (Upcoming Bookings) --- */
+.table-wrapper {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.bookings-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+}
+
+.bookings-table th {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 12px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.bookings-table td {
+  padding: 16px 12px;
+  font-weight: 500;
+  vertical-align: middle;
+}
+
+.bookings-table tbody tr {
+  background-color: #FDFEFE;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  border: 1px solid var(--border-color);
+}
+
+.bookings-table tbody tr:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-badge.approved {
+  background-color: #E8F5E9;
+  color: #4CAF50;
+}
+
+.status-badge.pending {
+  background-color: #FFFDE7;
+  color: #FBC02D;
+}
+
+.status-badge.cancelled {
+  background-color: #FFEBEE;
+  color: #E53935;
+}
+
+/* --- Chart Cards --- */
+.chart-container {
+  height: 350px; /* Give charts a fixed height */
+}
+
+/* --- Custom Booking Modal --- */
+.booking-modal {
+  display: none;
+  position: fixed;
+  z-index: 1060;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.booking-modal-inner {
+  background: #fff;
+  padding: 25px 30px;
+  border-radius: var(--card-radius);
+  max-width: 550px;
+  width: 90%;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  animation: slideUp 0.3s ease;
+}
+
+.close-btn {
+  float: right;
+  font-size: 1.7rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.close-btn:hover { color: var(--text-primary); }
+
+#modalBody h3 {
+  font-weight: 700;
+  color: var(--accent-color);
+  margin-top: 0;
+}
+#modalBody p {
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+#modalBody p strong {
+  color: var(--text-secondary);
+  width: 150px;
+  display: inline-block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; } to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Ensure Bootstrap Modals (like Change Password) are styled */
+.modal-content {
+  border-radius: var(--card-radius);
+  border: none;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+.modal-header {
+  border-bottom: 1px solid var(--border-color);
+  padding: 1.5rem;
+}
+.modal-body {
+  padding: 1.5rem;
+}
+.modal-footer {
+  border-top: 1px solid var(--border-color);
+  padding: 1.5rem;
+}
+.search-dropdown .dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 40px;
+  width: 320px;
+  background: white;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  border-radius: 8px;
+  z-index: 999;
+}
+
+.search-dropdown .dropdown-content.show {
+  display: block;
+}
+
+.search-item:hover {
+  background: #f8f9fa;
+}

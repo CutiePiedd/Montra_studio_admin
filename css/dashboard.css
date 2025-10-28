@@ -326,3 +326,12 @@ main {
   background-color: #0f0cc4b3;
   color: white;
 }
+.search-dropdown .dropdown-content {
+  position: absolute;
+  right: 0;
+  top: 40px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  z-index: 1050;
+}
