@@ -450,3 +450,32 @@ body {
 .search-item:hover {
   background: #f8f9fa;
 }
+/*
+ * Styles for the scrollable notification dropdown
+ */
+.notif-list-wrapper {
+  /* This sets a maximum height. Adjust as needed. */
+  max-height: 350px; 
+  
+  /* This adds a vertical scrollbar ONLY if the content overflows */
+  overflow-y: auto;
+}
+
+/* Optional: Improve scrollbar styling for webkit browsers (Chrome, Safari) */
+.notif-list-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notif-list-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+  border-radius: 10px;
+}
+ 
+.notif-list-wrapper::-webkit-scrollbar-thumb {
+  background: #ccc; 
+  border-radius: 10px;
+}
+
+.notif-list-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #aaa; 
+}

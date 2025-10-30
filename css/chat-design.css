@@ -162,3 +162,50 @@
       font-size: 3rem;
       margin-bottom: 1rem;
     }
+    .notif-item {
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* --- Notification & Search Dropdowns --- */
+.notification-dropdown, .search-dropdown {
+  position: relative;
+}
+
+.notif-count {
+  font-size: 0.65rem;
+  padding: 2px 5px;
+  top: -2px !important;
+  right: -5px !important;
+  left: auto !important;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  top: 150%;
+  right: 0;
+  background-color: var(--card-bg);
+  min-width: 300px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.notification-dropdown.show .dropdown-content,
+.search-dropdown.show .dropdown-content {
+  display: block;
+}
+
+.notif-item p { margin-bottom: 4px; }
+.notif-item small { color: var(--text-secondary); }
+.view-all {
+  display: block;
+  text-align: center;
+  padding: 12px;
+  background-color: #f9f9f9;
+  color: var(--accent-color);
+  font-weight: 600;
+  text-decoration: none;
+}
+.view-all:hover { background-color: #f1f1f1; }

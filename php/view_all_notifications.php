@@ -171,7 +171,7 @@ header("Expires: 0");
         <li><a href="user_management.php" class="nav-link"><i class="fa-solid fa-users"></i> User Management</a></li>
         <li><a href="admin_bookings.php" class="nav-link"><i class="fa-solid fa-calendar-check"></i> Bookings</a></li>
         <li><a href="packages.php" class="nav-link"><i class="fa-solid fa-box-archive"></i> Packages</a></li>
-        <li><a href="admin_chat.php" class="nav-link"><i class="fa-solid fa-comments"></i> Chat</a></li>
+        <li><a href="admin_chat.php" class="nav-link"><i class="fa-solid fa-comments"></i> Customer Service</a></li>
          <li class="nav-item">
                     <a href="admin_view_album.php" class="nav-link">
                         <i class="fas fa-comments"></i>

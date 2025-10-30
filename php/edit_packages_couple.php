@@ -11,6 +11,39 @@ if (!isset($_SESSION['admin_id'])) {
 $adminName = $_SESSION['admin_name'];
 $admin_id = $_SESSION['admin_id'];
 
+// --- Fetch unread messages list (to show inside notification dropdown) ---
+$msgNotifs = [];
+$msgNotifQuery = "
+  SELECT m.id, m.message, m.sent_at, u.first_name, u.last_name
+  FROM messages m
+  JOIN users u ON m.sender_id = u.id
+  WHERE m.receiver_id = ? AND m.sender_type = 'user' AND m.is_read = 0
+  ORDER BY m.sent_at DESC
+  LIMIT 5
+";
+if ($stmt = $conn->prepare($msgNotifQuery)) {
+    $stmt->bind_param("i", $admin_id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    while ($r = $res->fetch_assoc()) {
+        $msgNotifs[] = $r;
+    }
+    $stmt->close();
+}
+
+// --- Fetch unread message count (FOR CHAT ICON) ---
+$unreadMsgCount = 0;
+$msgQuery = "SELECT COUNT(*) AS unread_count FROM messages WHERE receiver_id = ? AND sender_type = 'user' AND is_read = 0";
+if ($stmt = $conn->prepare($msgQuery)) {
+    $stmt->bind_param("i", $admin_id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $msgData = $res->fetch_assoc();
+    if ($msgData && isset($msgData['unread_count'])) {
+        $unreadMsgCount = (int)$msgData['unread_count'];
+    }
+    $stmt->close();
+}
 // Fetch admin details
 $query = "SELECT name, email, address, contact_number FROM admins WHERE id = ?";
 $stmt = $conn->prepare($query);
@@ -189,7 +222,7 @@ header("Expires: 0");
          <li class="nav-item">
   <a href="admin_chat.php" class="nav-link">
     <i class="fas fa-comments"></i>
-    <span>Messages</span>
+    <span>Customer Service</span>
   </a>
 </li>
  <li class="nav-item">
@@ -235,21 +268,31 @@ header("Expires: 0");
               </span>
             <?php endif; ?>
 
-            <div class="dropdown-content">
-              <?php if ($notifCount === 0): ?>
-                <p class="px-3 py-3 mb-0 text-center text-muted">No new notifications</p>
-              <?php else: ?>
-                <?php while ($n = $notifs->fetch_assoc()): ?>
-                  <div class="notif-item px-3 py-2">
+           <div class="dropdown-content">
+    <?php if ($notifCount === 0): ?>
+        <p class="px-3 py-3 mb-0 text-center text-muted">No new notifications</p>
+    <?php else: ?>
+        <div class="notif-list-wrapper"> 
+            <?php while ($n = $notifs->fetch_assoc()): ?>
+                <div class="notif-item px-3 py-2">
                     <p class="mb-1"><?php echo htmlspecialchars($n['message']); ?></p>
                     <small class="text-muted"><?php echo date('M d, Y h:i A', strtotime($n['created_at'])); ?></small>
-                  </div>
-                <?php endwhile; ?>
-              <?php endif; ?>
-              <a href="view_all_notifications.php" class="view-all">View all notifications</a>
-            </div>
+                </div>
+            <?php endwhile; ?>
+        </div> <?php endif; ?>
+    <a href="view_all_notifications.php" class="view-all">View all notifications</a>
+</div>
           </div>
-          
+          <div class="chat-notif position-relative">
+  <a href="admin_chat.php" class="text-dark">
+    <i class="fas fa-comments icon-btn"></i>
+    <?php if ($unreadMsgCount > 0): ?>
+      <span class="notif-count position-absolute translate-middle badge rounded-pill bg-danger">
+        <?php echo $unreadMsgCount; ?>
+      </span>
+    <?php endif; ?>
+  </a>
+</div>
           <div class="dropdown">
             <div class="profile-info" id="adminDropdown" data-bs-toggle="dropdown" aria-expanded="false">
               <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="Admin">
@@ -484,6 +527,109 @@ header("Expires: 0");
       }
     });
   </script>
+ <script>
+let selectedUserId = null;
+const adminId = <?php echo $admin_id; ?>;
+const chatBox = document.getElementById('chatMessages');
 
+// 🟦 Load messages (used by openChat and after sending)
+function loadMessages() {
+  if (!selectedUserId) return; // prevent running with no user selected
+
+  fetch(`../api/get_messages.php?admin_id=${adminId}&user_id=${selectedUserId}`)
+    .then(res => res.json())
+    .then(messages => {
+      chatBox.innerHTML = '';
+
+      if (messages.length === 0) {
+        chatBox.innerHTML = `<p class='text-center text-muted'>No messages yet. Start the conversation!</p>`;
+      } else {
+        messages.forEach(msg => {
+          const msgEl = document.createElement('div');
+          msgEl.classList.add('message', msg.sender_type === 'admin' ? 'admin' : 'user');
+          msgEl.textContent = msg.message;
+          chatBox.appendChild(msgEl);
+        });
+      }
+
+      chatBox.scrollTop = chatBox.scrollHeight;
+    })
+    .catch(err => console.error('Error loading messages:', err));
+}
+
+// 🟩 Open chat with selected user
+function openChat(userId, userName) {
+  selectedUserId = userId;
+
+  // Highlight selected user
+  document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
+  const el = document.querySelector(`.user-item[data-user-id='${userId}']`);
+  if (el) el.classList.add('active');
+  // --- 👇 ADD THIS BLOCK ---
+  // Find and remove the badge from the list item instantly
+  const userListBadge = el.querySelector('.user-unread-badge');
+  if (userListBadge) {
+      userListBadge.remove();
+  }
+
+  // Update header and show input area
+  document.getElementById('chatHeader').textContent = "Chat with " + (userName || "User");
+  document.getElementById('chatInput').style.display = "flex";
+
+  // Hide placeholder
+  const placeholder = document.querySelector('.chat-placeholder');
+  if (placeholder) placeholder.style.display = 'none';
+
+  // Load messages
+  loadMessages();
+
+  // Mark messages as read
+  fetch(`../api/mark_messages_read.php?user_id=${selectedUserId}&admin_id=${adminId}`)
+    .then(res => res.json())
+    .then(() => {
+      const badge = document.querySelector('.chat-notif .notif-count');
+      if (badge) badge.remove();
+    })
+    .catch(err => console.error('Error marking messages read:', err));
+}
+
+// 🟨 Send message function
+function sendMessage() {
+  const messageInput = document.getElementById('messageText');
+  const message = messageInput.value.trim();
+  if (!message || !selectedUserId) return;
+
+  const formData = new FormData();
+  formData.append('sender_id', adminId);
+  formData.append('receiver_id', selectedUserId);
+  formData.append('sender_type', 'admin');
+  formData.append('message', message);
+
+  fetch('../api/send_message.php', { method: 'POST', body: formData })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        messageInput.value = '';
+        loadMessages(); // refresh immediately
+      } else {
+        console.error('Failed to send message:', data);
+      }
+    })
+    .catch(err => console.error('Error sending message:', err));
+}
+
+// 🟧 Send message on Enter key
+document.getElementById('messageText').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+// 🟪 Auto-refresh messages every 5 seconds if a user is open
+setInterval(() => {
+  if (selectedUserId) loadMessages();
+}, 5000);
+</script>
 </body>
 </html>
